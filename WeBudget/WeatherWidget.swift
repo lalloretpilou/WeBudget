@@ -1,4 +1,4 @@
-// WeatherViews.swift - Version complète avec meilleure gestion des permissions
+// WeatherViews.swift - Version complète avec polices Space Grotesk
 import SwiftUI
 import WeatherKit
 
@@ -21,15 +21,11 @@ struct WeatherWidget: View {
                 
                 rightSection
             }
-            
-            // Section d'action si nécessaire
-            //ctionButtonIfNeeded
         }
         .padding()
         .background(weatherBackground)
         .cornerRadius(12)
         .onAppear {
-            // ✅ CORRECTION: Vérifier immédiatement le statut et demander si nécessaire
             checkAndRequestLocationIfNeeded()
         }
     }
@@ -39,12 +35,12 @@ struct WeatherWidget: View {
         
         switch availability {
         case .needsPermission:
-            print("🔐 Demande automatique de permission au démarrage du widget")
+            print("Demande automatique de permission au démarrage du widget")
             weatherManager.requestLocationPermission()
         case .authorized:
-            print("✅ Permission déjà accordée, actualisation météo")
+            print("Permission déjà accordée, actualisation météo")
             if weatherManager.currentWeather == nil {
-                weatherManager.requestLocationPermission() // Relance la localisation
+                weatherManager.requestLocationPermission()
             }
         default:
             print("ℹ️ Statut localisation: \(availability)")
@@ -62,12 +58,8 @@ struct WeatherWidget: View {
     
     private var locationSection: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text("📍 Localisation")
-                .font(.caption2)
-                .foregroundColor(.secondary)
-            
             Text(weatherManager.locationName)
-                .font(.caption)
+                .font(.appCaption) // Space Grotesk Regular
                 .fontWeight(.medium)
                 .foregroundColor(.primary)
         }
@@ -78,17 +70,17 @@ struct WeatherWidget: View {
             if let weather = weatherManager.currentWeather {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("\(Int(weather.temperature.value))°C")
-                        .font(.title2)
+                        .font(.appTitle2) // Space Grotesk SemiBold
                         .fontWeight(.bold)
                     
                     Text(weather.condition.description)
-                        .font(.caption)
+                        .font(.appCaption) // Space Grotesk Regular
                         .foregroundColor(.secondary)
                 }
             } else if weatherManager.isLoading {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Chargement...")
-                        .font(.caption)
+                        .font(.appCaption) // Space Grotesk Regular
                         .foregroundColor(.secondary)
                     
                     ProgressView()
@@ -97,12 +89,12 @@ struct WeatherWidget: View {
             } else {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Non disponible")
-                        .font(.caption)
+                        .font(.appCaption) // Space Grotesk Regular
                         .foregroundColor(.secondary)
                     
                     if let error = weatherManager.errorMessage {
                         Text(locationStatusText)
-                            .font(.caption2)
+                            .font(.appCaption2) // Space Grotesk Light
                             .foregroundColor(.orange)
                     }
                 }
@@ -116,18 +108,15 @@ struct WeatherWidget: View {
             if let impact = budgetImpact {
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("Impact budget")
-                        .font(.caption2)
+                        .font(.appCaption2) // Space Grotesk Light
                         .foregroundColor(.secondary)
                     
                     Text(impact.text)
-                        .font(.caption)
+                        .font(.appCaption) // Space Grotesk Regular
                         .fontWeight(.medium)
                         .foregroundColor(impact.color)
                 }
             }
-            
-            // Statut de localisation
-            locationStatusIndicator
         }
     }
     
@@ -140,33 +129,10 @@ struct WeatherWidget: View {
                 .frame(width: 8, height: 8)
             
             Text(statusText(for: availability))
-                .font(.caption2)
+                .font(.appCaption2) // Space Grotesk Light
                 .foregroundColor(.secondary)
         }
     }
-    
-//    private var actionButtonIfNeeded: some View? {
-//        let availability = weatherManager.checkLocationAvailability()
-//        
-//        guard availability != .authorized || weatherManager.errorMessage != nil else {
-//            return nil
-//        }
-//        
-//        return Button(action: {
-//            handleLocationAction(for: availability)
-//        }) {
-//            HStack {
-//                Image(systemName: buttonIcon(for: availability))
-//                Text(buttonText(for: availability))
-//            }
-//            .font(.caption)
-//            .foregroundColor(.blue)
-//            .padding(.horizontal, 12)
-//            .padding(.vertical, 6)
-//            .background(Color.blue.opacity(0.1))
-//            .cornerRadius(8)
-//        }
-//    }
     
     // MARK: - Propriétés calculées
     
@@ -284,49 +250,6 @@ struct WeatherWidget: View {
         }
     }
     
-    private func buttonIcon(for availability: LocationAvailability) -> String {
-        switch availability {
-        case .needsPermission:
-            return "location.badge.questionmark"
-        case .denied:
-            return "gearshape.fill"
-        case .servicesDisabled:
-            return "gear"
-        case .authorized:
-            return "arrow.clockwise"
-        case .unknown:
-            return "questionmark.circle"
-        }
-    }
-    
-    private func buttonText(for availability: LocationAvailability) -> String {
-        switch availability {
-        case .needsPermission:
-            return "Autoriser la localisation"
-        case .denied:
-            return "Ouvrir les Réglages"
-        case .servicesDisabled:
-            return "Activer les services"
-        case .authorized:
-            return "Actualiser"
-        case .unknown:
-            return "Réessayer"
-        }
-    }
-    
-    private func handleLocationAction(for availability: LocationAvailability) {
-        switch availability {
-        case .needsPermission, .authorized, .unknown:
-            weatherManager.requestLocationPermission()
-            
-        case .denied, .servicesDisabled:
-            // Ouvrir les réglages iOS
-            if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(settingsUrl)
-            }
-        }
-    }
-    
     private func isRainyWeather(_ condition: WeatherCondition) -> Bool {
         switch condition {
         case .rain, .heavyRain, .isolatedThunderstorms, .strongStorms,
@@ -365,14 +288,14 @@ struct WeatherSuggestionsView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("💡 Suggestions météo")
-                    .font(.headline)
+                    .font(.appHeadline) // Space Grotesk SemiBold
                     .fontWeight(.bold)
                 
                 Spacer()
                 
                 if !suggestions.isEmpty {
                     Text("\(suggestions.count)")
-                        .font(.caption)
+                        .font(.appCaption) // Space Grotesk Regular
                         .fontWeight(.medium)
                         .foregroundColor(.white)
                         .padding(.horizontal, 8)
@@ -388,7 +311,7 @@ struct WeatherSuggestionsView: View {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(.green)
                         Text("Aucune recommandation météo particulière aujourd'hui")
-                            .font(.subheadline)
+                            .font(.appSubheadline) // Space Grotesk Medium
                             .foregroundColor(.secondary)
                     }
                     .padding()
@@ -397,7 +320,7 @@ struct WeatherSuggestionsView: View {
                         Image(systemName: "location.slash")
                             .foregroundColor(.orange)
                         Text("Activez la localisation pour recevoir des suggestions personnalisées")
-                            .font(.subheadline)
+                            .font(.appSubheadline) // Space Grotesk Medium
                             .foregroundColor(.secondary)
                     }
                     .padding()
@@ -411,7 +334,7 @@ struct WeatherSuggestionsView: View {
                     Button("Voir \(suggestions.count - 2) suggestion\(suggestions.count > 3 ? "s" : "") de plus") {
                         // Action pour voir plus
                     }
-                    .font(.caption)
+                    .font(.appCaption) // Space Grotesk Regular
                     .foregroundColor(.blue)
                     .padding(.top, 5)
                 }
@@ -434,11 +357,11 @@ struct SuggestionCard: View {
             
             VStack(alignment: .leading, spacing: 3) {
                 Text(suggestion.title)
-                    .font(.subheadline)
+                    .font(.appSubheadline) // Space Grotesk Medium
                     .fontWeight(.medium)
                 
                 Text(suggestion.message)
-                    .font(.caption)
+                    .font(.appCaption) // Space Grotesk Regular
                     .foregroundColor(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -451,7 +374,7 @@ struct SuggestionCard: View {
                     .frame(width: 8, height: 8)
                 
                 Text(suggestion.category.icon)
-                    .font(.caption2)
+                    .font(.appCaption2) // Space Grotesk Light
             }
         }
         .padding(.vertical, 10)
@@ -478,7 +401,7 @@ struct ExpensePredictionsView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("📊 Prédictions météo")
-                    .font(.headline)
+                    .font(.appHeadline) // Space Grotesk SemiBold
                     .fontWeight(.bold)
                 
                 Spacer()
@@ -486,7 +409,7 @@ struct ExpensePredictionsView: View {
                 if !predictions.isEmpty {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundColor(.orange)
-                        .font(.caption)
+                        .font(.appCaption) // Space Grotesk Regular
                 }
             }
             
@@ -496,7 +419,7 @@ struct ExpensePredictionsView: View {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(.green)
                         Text("Aucun impact météo prévu sur vos budgets")
-                            .font(.subheadline)
+                            .font(.appSubheadline) // Space Grotesk Medium
                             .foregroundColor(.secondary)
                     }
                     .padding()
@@ -505,7 +428,7 @@ struct ExpensePredictionsView: View {
                         Image(systemName: "location.slash")
                             .foregroundColor(.orange)
                         Text("Données météo requises pour les prédictions budgétaires")
-                            .font(.subheadline)
+                            .font(.appSubheadline) // Space Grotesk Medium
                             .foregroundColor(.secondary)
                     }
                     .padding()
@@ -534,11 +457,11 @@ struct PredictionCard: View {
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(String(prediction.category.displayName.dropFirst(2)))
-                        .font(.subheadline)
+                        .font(.appSubheadline) // Space Grotesk Medium
                         .fontWeight(.medium)
                     
                     Text("≈ +\(prediction.predictedIncrease.formatted(.currency(code: "EUR")))")
-                        .font(.caption)
+                        .font(.appCaption) // Space Grotesk Regular
                         .foregroundColor(.orange)
                         .fontWeight(.semibold)
                 }
@@ -547,7 +470,7 @@ struct PredictionCard: View {
                 
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("\(Int(prediction.confidence * 100))%")
-                        .font(.caption)
+                        .font(.appCaption) // Space Grotesk Regular
                         .fontWeight(.medium)
                         .foregroundColor(confidenceColor)
                     
@@ -560,7 +483,7 @@ struct PredictionCard: View {
             }
             
             Text(prediction.reason)
-                .font(.caption)
+                .font(.appCaption) // Space Grotesk Regular
                 .foregroundColor(.secondary)
                 .padding(.top, 2)
         }

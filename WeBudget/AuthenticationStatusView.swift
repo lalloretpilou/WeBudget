@@ -11,12 +11,12 @@ struct AuthenticationStatusView: View {
                 .foregroundColor(budgetManager.isAuthenticated ? .green : .red)
             
             Text(budgetManager.isAuthenticated ? "Connecté à iCloud" : "Non connecté à iCloud")
-                .font(.title2)
+                .font(.appTitle2) // Space Grotesk SemiBold
                 .fontWeight(.bold)
                 .foregroundColor(budgetManager.isAuthenticated ? .green : .red)
             
             Text(budgetManager.authenticationStatus)
-                .font(.body)
+                .font(.appBody) // Space Grotesk Regular
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
                 .padding(.horizontal)
@@ -24,25 +24,28 @@ struct AuthenticationStatusView: View {
             if !budgetManager.isAuthenticated {
                 VStack(spacing: 15) {
                     Text("Pour utiliser WeBudget, vous devez :")
-                        .font(.headline)
+                        .font(.appHeadline) // Space Grotesk SemiBold
                     
                     VStack(alignment: .leading, spacing: 10) {
                         HStack {
                             Image(systemName: "1.circle.fill")
                                 .foregroundColor(.blue)
                             Text("Vous connecter à iCloud dans Réglages iOS")
+                                .font(.appCallout) // Space Grotesk Regular
                         }
                         
                         HStack {
                             Image(systemName: "2.circle.fill")
                                 .foregroundColor(.blue)
                             Text("Activer iCloud Drive")
+                                .font(.appCallout) // Space Grotesk Regular
                         }
                         
                         HStack {
                             Image(systemName: "3.circle.fill")
                                 .foregroundColor(.blue)
                             Text("Redémarrer l'application")
+                                .font(.appCallout) // Space Grotesk Regular
                         }
                     }
                     .padding()
@@ -56,7 +59,7 @@ struct AuthenticationStatusView: View {
                 budgetManager.checkAuthentication()
             } label: {
                 Label("Vérifier à nouveau", systemImage: "arrow.clockwise")
-                    .font(.headline)
+                    .font(.buttonText) // Space Grotesk Medium
                     .foregroundColor(.white)
                     .padding()
                     .background(Color.blue)

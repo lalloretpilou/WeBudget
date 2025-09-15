@@ -1,24 +1,34 @@
 //
-//  AddTransactionView.swift
+//  EditTransactionView.swift
 //  WeBudget
 //
-//  Created by Pierre-Louis L'ALLORET on 14/09/2025.
+//  Created by Pierre-Louis L'ALLORET on 15/09/2025.
 //
 
-// AddTransactionView.swift
 import SwiftUI
 
-struct AddTransactionView: View {
+struct EditTransactionView: View {
     @EnvironmentObject var budgetManager: BudgetManager
     @Environment(\.dismiss) private var dismiss
     
-    @State private var date = Date()
-    @State private var description = ""
-    @State private var selectedCategory: TransactionCategory = .alimentation
-    @State private var amount = ""
-    @State private var selectedPayer: Payer = .pilou
+    let transaction: Transaction
+    
+    @State private var date: Date
+    @State private var description: String
+    @State private var selectedCategory: TransactionCategory
+    @State private var amount: String
+    @State private var selectedPayer: Payer
     @State private var showingAlert = false
     @State private var alertMessage = ""
+    
+    init(transaction: Transaction) {
+        self.transaction = transaction
+        _date = State(initialValue: transaction.date)
+        _description = State(initialValue: transaction.description)
+        _selectedCategory = State(initialValue: transaction.category)
+        _amount = State(initialValue: String(transaction.amount).replacingOccurrences(of: ".", with: ","))
+        _selectedPayer = State(initialValue: transaction.payer)
+    }
     
     var body: some View {
         NavigationView {
@@ -69,8 +79,8 @@ struct AddTransactionView: View {
                 }
                 
                 if !description.isEmpty && !amount.isEmpty {
-                    Section("📋 Résumé") {
-                        TransactionPreviewView(
+                    Section("📋 Aperçu des modifications") {
+                        TransactionPreviewViewEdit(
                             date: date,
                             description: description,
                             category: selectedCategory,
@@ -79,8 +89,37 @@ struct AddTransactionView: View {
                         )
                     }
                 }
+                
+                if hasChanges {
+                    Section("🔄 Modifications") {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Changements détectés :")
+                                .font(.appSubheadline) // Space Grotesk Medium
+                                .fontWeight(.medium)
+                            
+                            ForEach(changes, id: \.field) { change in
+                                HStack {
+                                    Text(change.field)
+                                        .font(.appCaption) // Space Grotesk Regular
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    VStack(alignment: .trailing, spacing: 2) {
+                                        Text(change.oldValue)
+                                            .font(.appCaption2) // Space Grotesk Light
+                                            .strikethrough()
+                                            .foregroundColor(.red)
+                                        Text(change.newValue)
+                                            .font(.appCaption2) // Space Grotesk Light
+                                            .foregroundColor(.green)
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
             }
-            .navigationTitle("➕ Nouvelle transaction")
+            .navigationTitle("✏️ Modifier transaction")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -91,12 +130,12 @@ struct AddTransactionView: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Ajouter") {
-                        addTransaction()
+                    Button("Sauvegarder") {
+                        updateTransaction()
                     }
                     .font(.buttonText) // Space Grotesk Medium
                     .fontWeight(.semibold)
-                    .disabled(!isFormValid)
+                    .disabled(!isFormValid || !hasChanges)
                 }
             }
             .alert("Erreur", isPresented: $showingAlert) {
@@ -117,7 +156,62 @@ struct AddTransactionView: View {
         (Double(amount.replacingOccurrences(of: ",", with: ".")) ?? 0) > 0
     }
     
-    private func addTransaction() {
+    private var hasChanges: Bool {
+        date != transaction.date ||
+        description.trimmingCharacters(in: .whitespacesAndNewlines) != transaction.description ||
+        selectedCategory != transaction.category ||
+        (Double(amount.replacingOccurrences(of: ",", with: ".")) ?? 0) != transaction.amount ||
+        selectedPayer != transaction.payer
+    }
+    
+    private var changes: [FieldChange] {
+        var changesList: [FieldChange] = []
+        
+        if date != transaction.date {
+            changesList.append(FieldChange(
+                field: "Date",
+                oldValue: transaction.date.formatted(.dateTime.day().month().year()),
+                newValue: date.formatted(.dateTime.day().month().year())
+            ))
+        }
+        
+        if description.trimmingCharacters(in: .whitespacesAndNewlines) != transaction.description {
+            changesList.append(FieldChange(
+                field: "Description",
+                oldValue: transaction.description,
+                newValue: description.trimmingCharacters(in: .whitespacesAndNewlines)
+            ))
+        }
+        
+        if selectedCategory != transaction.category {
+            changesList.append(FieldChange(
+                field: "Catégorie",
+                oldValue: String(transaction.category.displayName.dropFirst(2)),
+                newValue: String(selectedCategory.displayName.dropFirst(2))
+            ))
+        }
+        
+        let newAmount = Double(amount.replacingOccurrences(of: ",", with: ".")) ?? 0
+        if newAmount != transaction.amount {
+            changesList.append(FieldChange(
+                field: "Montant",
+                oldValue: transaction.amount.formatted(.currency(code: "EUR")),
+                newValue: newAmount.formatted(.currency(code: "EUR"))
+            ))
+        }
+        
+        if selectedPayer != transaction.payer {
+            changesList.append(FieldChange(
+                field: "Payeur",
+                oldValue: String(transaction.payer.displayName.dropFirst(2)),
+                newValue: String(selectedPayer.displayName.dropFirst(2))
+            ))
+        }
+        
+        return changesList
+    }
+    
+    private func updateTransaction() {
         guard let amountValue = Double(amount.replacingOccurrences(of: ",", with: ".")) else {
             alertMessage = "Montant invalide"
             showingAlert = true
@@ -130,7 +224,8 @@ struct AddTransactionView: View {
             return
         }
         
-        let transaction = Transaction(
+        let updatedTransaction = Transaction(
+            id: transaction.id, // Conserver le même ID
             date: date,
             description: description.trimmingCharacters(in: .whitespacesAndNewlines),
             category: selectedCategory,
@@ -138,12 +233,18 @@ struct AddTransactionView: View {
             payer: selectedPayer
         )
         
-        budgetManager.saveTransaction(transaction)
+        budgetManager.updateTransaction(updatedTransaction)
         dismiss()
     }
 }
 
-struct TransactionPreviewView: View {
+struct FieldChange {
+    let field: String
+    let oldValue: String
+    let newValue: String
+}
+
+struct TransactionPreviewViewEdit: View {
     let date: Date
     let description: String
     let category: TransactionCategory

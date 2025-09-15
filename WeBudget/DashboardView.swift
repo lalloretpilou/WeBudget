@@ -1,4 +1,4 @@
-// DashboardView.swift - Version mise à jour et simplifiée
+// DashboardView.swift - Version avec polices Space Grotesk
 import SwiftUI
 
 struct DashboardView: View {
@@ -35,7 +35,7 @@ struct DashboardView: View {
                 }
                 .padding()
             }
-            .navigationTitle("💰 Tableau de bord")
+            .navigationTitle("Tableau de bord")
             .refreshable {
                 budgetManager.loadData()
                 weatherManager.loadWeather()
@@ -44,7 +44,7 @@ struct DashboardView: View {
     }
 }
 
-// MARK: - Vues existantes (ne pas changer)
+// MARK: - StatsCardsView avec polices Space Grotesk
 struct StatsCardsView: View {
     @EnvironmentObject var budgetManager: BudgetManager
     
@@ -97,12 +97,14 @@ struct StatCard: View {
             }
             
             VStack(alignment: .leading, spacing: 4) {
+                // ✅ Police Space Grotesk Bold pour les montants
                 Text(value.formatted(.currency(code: "EUR")))
-                    .font(.title2)
+                    .font(.currencyMedium) // Space Grotesk SemiBold 20pt
                     .fontWeight(.bold)
                 
+                // ✅ Police Space Grotesk Regular pour les titres
                 Text(title)
-                    .font(.caption)
+                    .font(.appFootnote) // Space Grotesk Regular 13pt
                     .foregroundColor(.secondary)
             }
         }
@@ -117,8 +119,9 @@ struct BudgetProgressView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
+            // ✅ Police Space Grotesk Bold pour les titres de section
             Text("🎯 Suivi des budgets")
-                .font(.headline)
+                .font(.appTitle3) // Space Grotesk SemiBold 20pt
                 .fontWeight(.bold)
             
             ForEach(TransactionCategory.allCases, id: \.self) { category in
@@ -154,18 +157,21 @@ struct BudgetProgressRow: View {
     var body: some View {
         VStack(spacing: 8) {
             HStack {
+                // ✅ Police Space Grotesk Medium pour les noms de catégorie
                 Text(category.displayName)
-                    .font(.subheadline)
+                    .font(.appSubheadline) // Space Grotesk Medium 15pt
                     .fontWeight(.medium)
                 
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 2) {
+                    // ✅ Police Space Grotesk Medium pour les montants de budget
                     Text("\(spent.formatted(.currency(code: "EUR"))) / \(budget.formatted(.currency(code: "EUR")))")
-                        .font(.caption)
+                        .font(.currencySmall) // Space Grotesk Medium 16pt
                     
+                    // ✅ Police Space Grotesk Regular pour les détails
                     Text("Reste: \(remaining.formatted(.currency(code: "EUR")))")
-                        .font(.caption2)
+                        .font(.appCaption2) // Space Grotesk Light 11pt
                         .foregroundColor(.secondary)
                 }
             }
@@ -216,8 +222,9 @@ struct AlertsView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
+            // ✅ Police Space Grotesk Bold pour les titres de section
             Text("🔔 Alertes et notifications")
-                .font(.headline)
+                .font(.appTitle3) // Space Grotesk SemiBold 20pt
                 .fontWeight(.bold)
             
             ForEach(alerts) { alert in
@@ -252,8 +259,9 @@ struct AlertCard: View {
     let alert: AlertItem
     
     var body: some View {
+        // ✅ Police Space Grotesk Regular pour les messages d'alerte
         Text(alert.message)
-            .font(.subheadline)
+            .font(.appCallout) // Space Grotesk Regular 16pt
             .padding()
             .background(alert.type.color.opacity(0.1))
             .foregroundColor(alert.type.color)
@@ -271,8 +279,9 @@ struct RecentTransactionsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
             HStack {
+                // ✅ Police Space Grotesk Bold pour les titres de section
                 Text("💳 Transactions récentes")
-                    .font(.headline)
+                    .font(.appTitle3) // Space Grotesk SemiBold 20pt
                     .fontWeight(.bold)
                 
                 Spacer()
@@ -280,11 +289,13 @@ struct RecentTransactionsView: View {
                 NavigationLink("Voir tout") {
                     TransactionsView()
                 }
-                .font(.caption)
+                .font(.appCaption) // Space Grotesk Regular 12pt
             }
             
             if recentTransactions.isEmpty {
+                // ✅ Police Space Grotesk Regular pour le texte d'état vide
                 Text("Aucune transaction")
+                    .font(.appBody) // Space Grotesk Regular 17pt
                     .foregroundColor(.secondary)
                     .padding()
             } else {
@@ -308,20 +319,23 @@ struct TransactionRowView: View {
                 .font(.title2)
             
             VStack(alignment: .leading, spacing: 2) {
+                // ✅ Police Space Grotesk Medium pour les descriptions de transaction
                 Text(transaction.description)
-                    .font(.subheadline)
+                    .font(.appSubheadline) // Space Grotesk Medium 15pt
                     .fontWeight(.medium)
                 
                 HStack {
+                    // ✅ Police Space Grotesk Regular pour les détails secondaires
                     Text(transaction.category.displayName.dropFirst(2))
-                        .font(.caption)
+                        .font(.appCaption) // Space Grotesk Regular 12pt
                         .foregroundColor(.secondary)
                     
                     Text("•")
+                        .font(.appCaption)
                         .foregroundColor(.secondary)
                     
                     Text(transaction.payer.displayName.dropFirst(2))
-                        .font(.caption)
+                        .font(.appCaption) // Space Grotesk Regular 12pt
                         .foregroundColor(.secondary)
                 }
             }
@@ -329,13 +343,15 @@ struct TransactionRowView: View {
             Spacer()
             
             VStack(alignment: .trailing, spacing: 2) {
+                // ✅ Police Space Grotesk SemiBold pour les montants
                 Text("-\(transaction.amount.formatted(.currency(code: "EUR")))")
-                    .font(.subheadline)
+                    .font(.currencySmall) // Space Grotesk Medium 16pt
                     .fontWeight(.semibold)
                     .foregroundColor(.red)
                 
+                // ✅ Police Space Grotesk Light pour les dates
                 Text(transaction.date.formatted(.dateTime.day().month().year()))
-                    .font(.caption2)
+                    .font(.appCaption2) // Space Grotesk Light 11pt
                     .foregroundColor(.secondary)
             }
         }

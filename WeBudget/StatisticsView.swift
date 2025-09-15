@@ -1,4 +1,4 @@
-// StatisticsView.swift - Version corrigée
+// StatisticsView.swift - Version corrigée avec polices Space Grotesk
 import SwiftUI
 import Charts
 
@@ -44,18 +44,19 @@ struct CategoryExpensesChartView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
             Text("📊 Dépenses par catégorie")
-                .font(.headline)
+                .font(.appHeadline) // Space Grotesk SemiBold
                 .fontWeight(.bold)
             
             if categoryData.isEmpty {
                 Text("Aucune donnée disponible")
+                    .font(.appSubheadline) // Space Grotesk Medium
                     .foregroundColor(.secondary)
                     .frame(height: 200)
             } else {
                 Chart(categoryData, id: \.category) { item in
                     BarMark(
                         x: .value("Montant", item.amount),
-                        y: .value("Catégorie", String(item.category.displayName.dropFirst(2)))  // ← CORRECTION: String()
+                        y: .value("Catégorie", String(item.category.displayName.dropFirst(2)))
                     )
                     .foregroundStyle(item.category.color)
                 }
@@ -89,11 +90,12 @@ struct PayerContributionChartView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
             Text("💰 Répartition des contributions")
-                .font(.headline)
+                .font(.appHeadline) // Space Grotesk SemiBold
                 .fontWeight(.bold)
             
             if payerData.isEmpty {
                 Text("Aucune donnée disponible")
+                    .font(.appSubheadline) // Space Grotesk Medium
                     .foregroundColor(.secondary)
                     .frame(height: 200)
             } else {
@@ -108,7 +110,6 @@ struct PayerContributionChartView: View {
                 }
                 .frame(height: 200)
                 .chartLegend(position: .bottom)
-                // ← SUPPRESSION: .chartAngleSelection(value: .constant(nil))
             }
         }
         .padding()
@@ -154,11 +155,12 @@ struct MonthlyTrendsChartView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
             Text("📈 Évolution des dépenses sur 6 mois")
-                .font(.headline)
+                .font(.appHeadline) // Space Grotesk SemiBold
                 .fontWeight(.bold)
             
             if monthlyData.isEmpty {
                 Text("Aucune donnée disponible")
+                    .font(.appSubheadline) // Space Grotesk Medium
                     .foregroundColor(.secondary)
                     .frame(height: 200)
             } else {
@@ -183,7 +185,7 @@ struct MonthlyTrendsChartView: View {
                 .chartXAxis {
                     AxisMarks { _ in
                         AxisValueLabel()
-                            .font(.caption)
+                            .font(.appCaption) // Space Grotesk Regular
                     }
                 }
             }
@@ -223,23 +225,27 @@ struct MonthlyReportView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
             Text("📋 Rapport pour \(currentMonthName)")
-                .font(.headline)
+                .font(.appHeadline) // Space Grotesk SemiBold
                 .fontWeight(.bold)
             
             VStack(spacing: 12) {
                 HStack {
                     Text("💰 Budget total alloué:")
+                        .font(.appCallout) // Space Grotesk Regular
                         .fontWeight(.medium)
                     Spacer()
                     Text(budgetManager.totalBudgets.formatted(.currency(code: "EUR")))
+                        .font(.currencySmall) // Space Grotesk Medium
                         .fontWeight(.bold)
                 }
                 
                 HStack {
                     Text("💸 Dépenses réelles:")
+                        .font(.appCallout) // Space Grotesk Regular
                         .fontWeight(.medium)
                     Spacer()
                     Text(totalDepenses.formatted(.currency(code: "EUR")))
+                        .font(.currencySmall) // Space Grotesk Medium
                         .fontWeight(.bold)
                         .foregroundColor(.red)
                 }
@@ -248,27 +254,33 @@ struct MonthlyReportView: View {
                 
                 HStack {
                     Text(economie >= 0 ? "💚 Économie:" : "🔴 Dépassement:")
+                        .font(.appCallout) // Space Grotesk Regular
                         .fontWeight(.semibold)
                     Spacer()
                     Text(abs(economie).formatted(.currency(code: "EUR")))
+                        .font(.currencyMedium) // Space Grotesk SemiBold
                         .fontWeight(.bold)
                         .foregroundColor(economie >= 0 ? .green : .red)
                 }
                 
                 HStack {
                     Text("📊 Nombre de transactions:")
+                        .font(.appCallout) // Space Grotesk Regular
                         .fontWeight(.medium)
                     Spacer()
                     Text("\(monthlyTransactions.count)")
+                        .font(.appCallout) // Space Grotesk Regular
                         .fontWeight(.bold)
                 }
                 
                 if !monthlyTransactions.isEmpty {
                     HStack {
                         Text("💳 Dépense moyenne:")
+                            .font(.appCallout) // Space Grotesk Regular
                             .fontWeight(.medium)
                         Spacer()
                         Text((totalDepenses / Double(monthlyTransactions.count)).formatted(.currency(code: "EUR")))
+                            .font(.currencySmall) // Space Grotesk Medium
                             .fontWeight(.bold)
                     }
                 }

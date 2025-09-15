@@ -21,14 +21,14 @@ struct ConfigurationView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section("👥 Revenus du couple") {
+                Section("Revenus du couple") {
                     SalaireInputView(
-                        label: "💼 Salaire Pilou",
+                        label: "Salaire Pilou",
                         value: $tempSalaires.pilou
                     )
                     
                     SalaireInputView(
-                        label: "💼 Salaire Doudou",
+                        label: "Salaire Doudou",
                         value: $tempSalaires.doudou
                     )
                     
@@ -58,6 +58,7 @@ struct ConfigurationView: View {
                     Button("💾 Sauvegarder") {
                         saveConfiguration()
                     }
+                    .font(.buttonText) // Space Grotesk Medium
                     .fontWeight(.semibold)
                 }
             }
@@ -66,7 +67,10 @@ struct ConfigurationView: View {
                 tempBudgets = budgetManager.budgets
             }
             .alert("Configuration sauvegardée !", isPresented: $showingSaveAlert) {
-                Button("OK") { }
+                Button("OK") {
+                    // Action OK
+                }
+                .font(.buttonText) // Space Grotesk Medium
             }
         }
     }
@@ -87,11 +91,13 @@ struct SalaireInputView: View {
     var body: some View {
         HStack {
             Text(label)
+                .font(.appCallout) // Space Grotesk Regular
                 .fontWeight(.medium)
             
             Spacer()
             
             TextField("Montant", value: $value, format: .currency(code: "EUR"))
+                .font(.currencySmall) // Space Grotesk Medium pour les montants
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .keyboardType(.decimalPad)
                 .frame(width: 120)
@@ -107,11 +113,13 @@ struct BudgetInputView: View {
     var body: some View {
         HStack {
             Text(category.displayName)
+                .font(.appCallout) // Space Grotesk Regular
                 .fontWeight(.medium)
             
             Spacer()
             
             TextField("Budget", value: $value, format: .currency(code: "EUR"))
+                .font(.currencySmall) // Space Grotesk Medium pour les montants
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .keyboardType(.decimalPad)
                 .frame(width: 120)
@@ -138,19 +146,20 @@ struct ProportionDisplayView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Répartition:")
-                .font(.subheadline)
+                .font(.appSubheadline) // Space Grotesk Medium
                 .fontWeight(.semibold)
             
             HStack {
                 Text("Pilou: \(pourcentagePilou.formatted(.number.precision(.fractionLength(1))))%")
-                    .font(.subheadline)
+                    .font(.appSubheadline) // Space Grotesk Medium
                     .foregroundColor(.blue)
                 
                 Text("•")
+                    .font(.appSubheadline) // Space Grotesk Medium
                     .foregroundColor(.secondary)
                 
                 Text("Doudou: \(pourcentageDoudou.formatted(.number.precision(.fractionLength(1))))%")
-                    .font(.subheadline)
+                    .font(.appSubheadline) // Space Grotesk Medium
                     .foregroundColor(.purple)
             }
             
@@ -197,11 +206,11 @@ struct RedistributionView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Compte personnel Pilou:")
-                        .font(.subheadline)
+                        .font(.appSubheadline) // Space Grotesk Medium
                         .fontWeight(.medium)
                     
                     Text(redistribPilou.formatted(.currency(code: "EUR")))
-                        .font(.title3)
+                        .font(.currencyMedium) // Space Grotesk SemiBold pour les montants
                         .fontWeight(.bold)
                         .foregroundColor(.blue)
                 }
@@ -210,11 +219,11 @@ struct RedistributionView: View {
                 
                 VStack(alignment: .trailing, spacing: 4) {
                     Text("Compte personnel Doudou:")
-                        .font(.subheadline)
+                        .font(.appSubheadline) // Space Grotesk Medium
                         .fontWeight(.medium)
                     
                     Text(redistribDoudou.formatted(.currency(code: "EUR")))
-                        .font(.title3)
+                        .font(.currencyMedium) // Space Grotesk SemiBold pour les montants
                         .fontWeight(.bold)
                         .foregroundColor(.purple)
                 }
@@ -224,25 +233,31 @@ struct RedistributionView: View {
             
             HStack {
                 Text("Revenus totaux:")
+                    .font(.appFootnote) // Space Grotesk Regular
                     .foregroundColor(.secondary)
                 Spacer()
                 Text(totalRevenus.formatted(.currency(code: "EUR")))
+                    .font(.currencySmall) // Space Grotesk Medium
                     .fontWeight(.medium)
             }
             
             HStack {
                 Text("Total charges communes:")
+                    .font(.appFootnote) // Space Grotesk Regular
                     .foregroundColor(.secondary)
                 Spacer()
                 Text(budgets.totalAmount.formatted(.currency(code: "EUR")))
+                    .font(.currencySmall) // Space Grotesk Medium
                     .fontWeight(.medium)
             }
             
             HStack {
                 Text("Reste à redistribuer:")
+                    .font(.appSubheadline) // Space Grotesk Medium
                     .fontWeight(.semibold)
                 Spacer()
                 Text(resteRedistribution.formatted(.currency(code: "EUR")))
+                    .font(.currencyMedium) // Space Grotesk SemiBold
                     .fontWeight(.bold)
                     .foregroundColor(resteRedistribution >= 0 ? .green : .red)
             }

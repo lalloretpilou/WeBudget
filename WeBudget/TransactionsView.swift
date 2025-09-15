@@ -10,6 +10,8 @@ import SwiftUI
 struct TransactionsView: View {
     @EnvironmentObject var budgetManager: BudgetManager
     @State private var showingAddTransaction = false
+    @State private var showingEditTransaction = false
+    @State private var transactionToEdit: Transaction?
     @State private var selectedCategory: TransactionCategory?
     @State private var searchText = ""
     
@@ -46,13 +48,22 @@ struct TransactionsView: View {
                                     Button("Supprimer", role: .destructive) {
                                         budgetManager.deleteTransaction(transaction)
                                     }
+                                    .font(.buttonText) // Space Grotesk Medium
+                                }
+                                .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                                    Button("Modifier") {
+                                        transactionToEdit = transaction
+                                        showingEditTransaction = true
+                                    }
+                                    .font(.buttonText) // Space Grotesk Medium
+                                    .tint(.blue)
                                 }
                         }
                     }
                     .searchable(text: $searchText, prompt: "Rechercher une transaction...")
                 }
             }
-            .navigationTitle("💳 Dépenses")
+            .navigationTitle("Dépenses")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -66,6 +77,11 @@ struct TransactionsView: View {
             }
             .sheet(isPresented: $showingAddTransaction) {
                 AddTransactionView()
+            }
+            .sheet(isPresented: $showingEditTransaction) {
+                if let transaction = transactionToEdit {
+                    EditTransactionView(transaction: transaction)
+                }
             }
         }
     }
@@ -107,7 +123,7 @@ struct FilterChip: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.subheadline)
+                .font(.appSubheadline) // Space Grotesk Medium
                 .fontWeight(.medium)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
@@ -129,11 +145,11 @@ struct TransactionDetailRowView: View {
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(transaction.description)
-                        .font(.headline)
+                        .font(.appHeadline) // Space Grotesk SemiBold
                         .fontWeight(.medium)
                     
                     Text(transaction.category.displayName.dropFirst(2))
-                        .font(.caption)
+                        .font(.appCaption) // Space Grotesk Regular
                         .foregroundColor(.secondary)
                 }
                 
@@ -141,19 +157,19 @@ struct TransactionDetailRowView: View {
                 
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("-\(transaction.amount.formatted(.currency(code: "EUR")))")
-                        .font(.headline)
+                        .font(.currencyMedium) // Space Grotesk SemiBold
                         .fontWeight(.bold)
                         .foregroundColor(.red)
                     
                     Text(transaction.date.formatted(.dateTime.day().month().year()))
-                        .font(.caption)
+                        .font(.appCaption) // Space Grotesk Regular
                         .foregroundColor(.secondary)
                 }
             }
             
             HStack {
                 Text("Payé par: \(transaction.payer.displayName)")
-                    .font(.caption)
+                    .font(.appCaption) // Space Grotesk Regular
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(transaction.category.color.opacity(0.2))
@@ -175,11 +191,11 @@ struct EmptyTransactionsView: View {
                 .foregroundColor(.gray)
             
             Text("Aucune transaction")
-                .font(.headline)
+                .font(.appHeadline) // Space Grotesk SemiBold
                 .foregroundColor(.secondary)
             
             Text("Ajoutez votre première transaction\nen appuyant sur le bouton +")
-                .font(.subheadline)
+                .font(.appSubheadline) // Space Grotesk Medium
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
         }
