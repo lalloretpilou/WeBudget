@@ -33,9 +33,13 @@ class WeatherManager: NSObject, ObservableObject {
         locationStatus = locationManager.authorizationStatus
         print("📱 Statut de localisation initial: \(locationStatus.description)")
         
-        // ✅ CORRECTION: Demander les permissions immédiatement
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            self?.requestLocationPermission()
+        // ✅ CORRECTION: Demander les permissions immédiatement au démarrage
+        if locationStatus == .notDetermined {
+            print("🔐 Demande automatique de permission au démarrage")
+            requestLocationPermission()
+        } else if locationStatus == .authorizedWhenInUse || locationStatus == .authorizedAlways {
+            print("✅ Permission déjà accordée, récupération de la localisation")
+            getCurrentLocation()
         }
     }
     
@@ -46,11 +50,22 @@ class WeatherManager: NSObject, ObservableObject {
         switch locationManager.authorizationStatus {
         case .notDetermined:
             print("🆕 Première demande de permission")
-            locationManager.requestWhenInUseAuthorization()
+            // ✅ AMÉLIORATION: S'assurer que la demande est faite depuis le main thread
+            DispatchQueue.main.async { [weak self] in
+                self?.locationManager.requestWhenInUseAuthorization()
+            }
             
         case .denied:
             print("❌ Permission refusée")
-            errorMessage = "Accès à la localisation refusé. Activez-la dans Réglages > Confidentialité > Service de localisation > WeBudget"
+            errorMessage = """
+            🚫 Accès à la localisation refusé
+            
+            Pour activer la météo:
+            1. Allez dans Réglages iOS
+            2. Cherchez "WeBudget"
+            3. Activez "Localisation"
+            4. Choisissez "Lors de l'utilisation"
+            """
             
         case .restricted:
             print("❌ Permission restreinte")
@@ -79,6 +94,15 @@ class WeatherManager: NSObject, ObservableObject {
         
         isLoading = true
         errorMessage = nil
+        
+        // ✅ AMÉLIORATION: Vérifier que les services de localisation sont activés
+        guard CLLocationManager.locationServicesEnabled() else {
+            print("❌ Services de localisation désactivés")
+            isLoading = false
+            errorMessage = "Les services de localisation sont désactivés dans les Réglages iOS"
+            return
+        }
+        
         locationManager.requestLocation()
     }
     
@@ -143,7 +167,25 @@ class WeatherManager: NSObject, ObservableObject {
         }
     }
     
-    // MARK: - Suggestions intelligentes basées sur la météo
+    // ✅ NOUVELLE MÉTHODE: Vérification et guide utilisateur
+    func checkLocationAvailability() -> LocationAvailability {
+        if !CLLocationManager.locationServicesEnabled() {
+            return .servicesDisabled
+        }
+        
+        switch locationManager.authorizationStatus {
+        case .notDetermined:
+            return .needsPermission
+        case .denied, .restricted:
+            return .denied
+        case .authorizedWhenInUse, .authorizedAlways:
+            return .authorized
+        @unknown default:
+            return .unknown
+        }
+    }
+    
+    // MARK: - Suggestions intelligentes basées sur la météo (inchangé)
     func getWeatherBasedSuggestions() -> [WeatherSuggestion] {
         guard let weather = currentWeather else {
             print("⚠️ Pas de données météo pour les suggestions")
@@ -229,7 +271,7 @@ class WeatherManager: NSObject, ObservableObject {
         return weekday == 1 || weekday == 7 // Dimanche ou Samedi
     }
     
-    // MARK: - Prédictions de dépenses basées sur la météo
+    // MARK: - Prédictions de dépenses basées sur la météo (inchangé)
     func getExpensePredictions(basedOn budgetManager: BudgetManager) -> [ExpensePrediction] {
         guard let weather = currentWeather,
               let forecast = forecast else {
@@ -297,11 +339,13 @@ extension WeatherManager: CLLocationManagerDelegate {
         if let clError = error as? CLError {
             switch clError.code {
             case .denied:
-                errorMessage = "Accès à la localisation refusé"
+                errorMessage = "Accès à la localisation refusé. Activez-la dans les Réglages."
             case .locationUnknown:
-                errorMessage = "Localisation introuvable"
+                errorMessage = "Localisation introuvable. Essayez de vous déplacer."
             case .network:
-                errorMessage = "Erreur réseau pour la localisation"
+                errorMessage = "Erreur réseau pour la localisation. Vérifiez votre connexion."
+            case .regionMonitoringDenied, .regionMonitoringFailure, .regionMonitoringSetupDelayed:
+                errorMessage = "Erreur de surveillance de région."
             default:
                 errorMessage = "Erreur localisation: \(error.localizedDescription)"
             }
@@ -322,15 +366,25 @@ extension WeatherManager: CLLocationManagerDelegate {
             print("❌ Permission refusée ou restreinte")
             isLoading = false
             errorMessage = status == .denied ?
-                "Accès à la localisation refusé. Activez-la dans Réglages" :
-                "Accès à la localisation restreint"
+                """
+                🚫 Accès à la localisation refusé
+                
+                Pour activer la météo:
+                1. Allez dans Réglages iOS
+                2. Cherchez "WeBudget"
+                3. Activez "Localisation"
+                4. Choisissez "Lors de l'utilisation"
+                """ :
+                "Accès à la localisation restreint par les contrôles parentaux"
             
         case .authorizedWhenInUse, .authorizedAlways:
             print("✅ Permission accordée, obtention de la localisation...")
+            errorMessage = nil // Effacer les erreurs précédentes
             getCurrentLocation()
             
         @unknown default:
             print("❓ Statut d'autorisation inconnu")
+            errorMessage = "Statut de localisation inconnu"
         }
     }
 }
@@ -345,6 +399,43 @@ extension CLAuthorizationStatus {
         case .authorizedAlways: return "Autorisé toujours"
         case .authorizedWhenInUse: return "Autorisé en utilisation"
         @unknown default: return "Inconnu"
+        }
+    }
+}
+
+// MARK: - Enum pour disponibilité localisation
+enum LocationAvailability {
+    case authorized
+    case needsPermission
+    case denied
+    case servicesDisabled
+    case unknown
+    
+    var userMessage: String {
+        switch self {
+        case .authorized:
+            return "✅ Localisation autorisée"
+        case .needsPermission:
+            return "🔐 Permission requise"
+        case .denied:
+            return "❌ Accès refusé"
+        case .servicesDisabled:
+            return "📱 Services désactivés"
+        case .unknown:
+            return "❓ Statut inconnu"
+        }
+    }
+    
+    var actionRequired: String? {
+        switch self {
+        case .needsPermission:
+            return "Appuyez pour autoriser la localisation"
+        case .denied:
+            return "Allez dans Réglages > WeBudget > Localisation"
+        case .servicesDisabled:
+            return "Activez les services de localisation dans Réglages > Confidentialité"
+        default:
+            return nil
         }
     }
 }

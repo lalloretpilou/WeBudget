@@ -1,4 +1,4 @@
-// WeatherViews.swift - Toutes les vues météo
+// WeatherViews.swift - Version complète avec meilleure gestion des permissions
 import SwiftUI
 import WeatherKit
 
@@ -7,35 +7,111 @@ struct WeatherWidget: View {
     @EnvironmentObject var weatherManager: WeatherManager
     
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Image(systemName: weatherIcon)
-                        .font(.title2)
-                        .foregroundColor(.blue)
-                    
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(weatherManager.locationName)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        
-                        if let weather = weatherManager.currentWeather {
-                            Text("\(Int(weather.temperature.value))°C")
-                                .font(.title2)
-                                .fontWeight(.semibold)
-                        }
-                    }
+        VStack(spacing: 12) {
+            // En-tête avec météo ou statut
+            HStack {
+                weatherIcon
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    locationSection
+                    temperatureSection
                 }
                 
-                if let weather = weatherManager.currentWeather {
+                Spacer()
+                
+                rightSection
+            }
+            
+            // Section d'action si nécessaire
+            //ctionButtonIfNeeded
+        }
+        .padding()
+        .background(weatherBackground)
+        .cornerRadius(12)
+        .onAppear {
+            // ✅ CORRECTION: Vérifier immédiatement le statut et demander si nécessaire
+            checkAndRequestLocationIfNeeded()
+        }
+    }
+    
+    private func checkAndRequestLocationIfNeeded() {
+        let availability = weatherManager.checkLocationAvailability()
+        
+        switch availability {
+        case .needsPermission:
+            print("🔐 Demande automatique de permission au démarrage du widget")
+            weatherManager.requestLocationPermission()
+        case .authorized:
+            print("✅ Permission déjà accordée, actualisation météo")
+            if weatherManager.currentWeather == nil {
+                weatherManager.requestLocationPermission() // Relance la localisation
+            }
+        default:
+            print("ℹ️ Statut localisation: \(availability)")
+        }
+    }
+    
+    // MARK: - Composants de l'interface
+    
+    private var weatherIcon: some View {
+        Image(systemName: weatherIconName)
+            .font(.title2)
+            .foregroundColor(iconColor)
+            .symbolEffect(.bounce, value: weatherManager.currentWeather?.temperature.value)
+    }
+    
+    private var locationSection: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("📍 Localisation")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+            
+            Text(weatherManager.locationName)
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(.primary)
+        }
+    }
+    
+    private var temperatureSection: some View {
+        Group {
+            if let weather = weatherManager.currentWeather {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(Int(weather.temperature.value))°C")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
                     Text(weather.condition.description)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
+            } else if weatherManager.isLoading {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Chargement...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    ProgressView()
+                        .scaleEffect(0.8)
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Non disponible")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    if let error = weatherManager.errorMessage {
+                        Text(locationStatusText)
+                            .font(.caption2)
+                            .foregroundColor(.orange)
+                    }
+                }
             }
-            
-            Spacer()
-            
+        }
+    }
+    
+    private var rightSection: some View {
+        VStack(alignment: .trailing, spacing: 4) {
             // Indicateur d'impact budget
             if let impact = budgetImpact {
                 VStack(alignment: .trailing, spacing: 2) {
@@ -50,34 +126,53 @@ struct WeatherWidget: View {
                 }
             }
             
-            if weatherManager.isLoading {
-                ProgressView()
-                    .scaleEffect(0.8)
-            } else if weatherManager.errorMessage != nil {
-                Button("Réessayer") {
-                    weatherManager.requestLocationPermission()
-                }
-                .font(.caption)
-                .foregroundColor(.blue)
-            }
-        }
-        .padding()
-        .background(
-            LinearGradient(
-                gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.cyan.opacity(0.05)]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
-        .cornerRadius(12)
-        .onAppear {
-            weatherManager.requestLocationPermission()
+            // Statut de localisation
+            locationStatusIndicator
         }
     }
     
-    private var weatherIcon: String {
+    private var locationStatusIndicator: some View {
+        let availability = weatherManager.checkLocationAvailability()
+        
+        return HStack(spacing: 4) {
+            Circle()
+                .fill(statusColor(for: availability))
+                .frame(width: 8, height: 8)
+            
+            Text(statusText(for: availability))
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+    }
+    
+//    private var actionButtonIfNeeded: some View? {
+//        let availability = weatherManager.checkLocationAvailability()
+//        
+//        guard availability != .authorized || weatherManager.errorMessage != nil else {
+//            return nil
+//        }
+//        
+//        return Button(action: {
+//            handleLocationAction(for: availability)
+//        }) {
+//            HStack {
+//                Image(systemName: buttonIcon(for: availability))
+//                Text(buttonText(for: availability))
+//            }
+//            .font(.caption)
+//            .foregroundColor(.blue)
+//            .padding(.horizontal, 12)
+//            .padding(.vertical, 6)
+//            .background(Color.blue.opacity(0.1))
+//            .cornerRadius(8)
+//        }
+//    }
+    
+    // MARK: - Propriétés calculées
+    
+    private var weatherIconName: String {
         guard let weather = weatherManager.currentWeather else {
-            return "cloud.fill"
+            return "location.slash"
         }
         
         switch weather.condition {
@@ -98,6 +193,51 @@ struct WeatherWidget: View {
         }
     }
     
+    private var iconColor: Color {
+        if weatherManager.currentWeather != nil {
+            return .blue
+        } else if weatherManager.isLoading {
+            return .orange
+        } else {
+            return .gray
+        }
+    }
+    
+    private var weatherBackground: some View {
+        Group {
+            if weatherManager.currentWeather != nil {
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.cyan.opacity(0.05)]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            } else {
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.gray.opacity(0.1), Color.gray.opacity(0.05)]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            }
+        }
+    }
+    
+    private var locationStatusText: String {
+        let availability = weatherManager.checkLocationAvailability()
+        
+        switch availability {
+        case .needsPermission:
+            return "Permission requise"
+        case .denied:
+            return "Accès refusé"
+        case .servicesDisabled:
+            return "Service désactivé"
+        case .authorized:
+            return "Autorisé"
+        case .unknown:
+            return "Statut inconnu"
+        }
+    }
+    
     private var budgetImpact: (text: String, color: Color)? {
         guard let weather = weatherManager.currentWeather else { return nil }
         
@@ -112,6 +252,79 @@ struct WeatherWidget: View {
         }
         
         return nil
+    }
+    
+    // MARK: - Méthodes d'aide
+    
+    private func statusColor(for availability: LocationAvailability) -> Color {
+        switch availability {
+        case .authorized:
+            return .green
+        case .needsPermission:
+            return .orange
+        case .denied, .servicesDisabled:
+            return .red
+        case .unknown:
+            return .gray
+        }
+    }
+    
+    private func statusText(for availability: LocationAvailability) -> String {
+        switch availability {
+        case .authorized:
+            return "Autorisé"
+        case .needsPermission:
+            return "Permission"
+        case .denied:
+            return "Refusé"
+        case .servicesDisabled:
+            return "Désactivé"
+        case .unknown:
+            return "Inconnu"
+        }
+    }
+    
+    private func buttonIcon(for availability: LocationAvailability) -> String {
+        switch availability {
+        case .needsPermission:
+            return "location.badge.questionmark"
+        case .denied:
+            return "gearshape.fill"
+        case .servicesDisabled:
+            return "gear"
+        case .authorized:
+            return "arrow.clockwise"
+        case .unknown:
+            return "questionmark.circle"
+        }
+    }
+    
+    private func buttonText(for availability: LocationAvailability) -> String {
+        switch availability {
+        case .needsPermission:
+            return "Autoriser la localisation"
+        case .denied:
+            return "Ouvrir les Réglages"
+        case .servicesDisabled:
+            return "Activer les services"
+        case .authorized:
+            return "Actualiser"
+        case .unknown:
+            return "Réessayer"
+        }
+    }
+    
+    private func handleLocationAction(for availability: LocationAvailability) {
+        switch availability {
+        case .needsPermission, .authorized, .unknown:
+            weatherManager.requestLocationPermission()
+            
+        case .denied, .servicesDisabled:
+            // Ouvrir les réglages iOS
+            if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(settingsUrl)
+            }
+        }
     }
     
     private func isRainyWeather(_ condition: WeatherCondition) -> Bool {
@@ -170,14 +383,25 @@ struct WeatherSuggestionsView: View {
             }
             
             if suggestions.isEmpty {
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("Aucune recommandation météo particulière aujourd'hui")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                if weatherManager.currentWeather != nil {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text("Aucune recommandation météo particulière aujourd'hui")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
+                } else {
+                    HStack {
+                        Image(systemName: "location.slash")
+                            .foregroundColor(.orange)
+                        Text("Activez la localisation pour recevoir des suggestions personnalisées")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
                 }
-                .padding()
             } else {
                 ForEach(suggestions.prefix(2)) { suggestion in
                     SuggestionCard(suggestion: suggestion)
@@ -267,14 +491,25 @@ struct ExpensePredictionsView: View {
             }
             
             if predictions.isEmpty {
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("Aucun impact météo prévu sur vos budgets")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                if weatherManager.currentWeather != nil {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text("Aucun impact météo prévu sur vos budgets")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
+                } else {
+                    HStack {
+                        Image(systemName: "location.slash")
+                            .foregroundColor(.orange)
+                        Text("Données météo requises pour les prédictions budgétaires")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
                 }
-                .padding()
             } else {
                 ForEach(predictions) { prediction in
                     PredictionCard(prediction: prediction)
