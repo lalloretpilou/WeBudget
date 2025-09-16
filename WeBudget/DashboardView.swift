@@ -1,41 +1,47 @@
-// DashboardView.swift - Version avec polices Space Grotesk
+// DashboardView.swift - Version Rétro avec ColorExtensions
 import SwiftUI
 
 struct DashboardView: View {
     @EnvironmentObject var budgetManager: BudgetManager
     @StateObject var weatherManager = WeatherManager()
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         NavigationView {
             ScrollView {
-                LazyVStack(spacing: 20) {
-                    // Widget météo en haut
+                LazyVStack(spacing: 25) {
+                    // Widget météo en haut avec style rétro
                     WeatherWidget()
                         .environmentObject(weatherManager)
                     
-                    // Statistiques principales
+                    // NOUVEAU: Widget de santé financière
+                    FinancialHealthWidget()
+                    
+                    // Statistiques principales avec nouveau design
                     StatsCardsView()
                     
                     // Suggestions météo intelligentes
                     WeatherSuggestionsView()
                         .environmentObject(weatherManager)
                     
-                    // Progression des budgets
+                    // Progression des budgets avec style rétro
                     BudgetProgressView()
                     
                     // Prédictions de dépenses basées sur la météo
                     ExpensePredictionsView()
                         .environmentObject(weatherManager)
                     
-                    // Alertes
+                    // Alertes avec style rétro
                     AlertsView()
                     
-                    // Transactions récentes
+                    // Transactions récentes avec nouveau style
                     RecentTransactionsView()
                 }
                 .padding()
             }
+            .background(Color.adaptiveBackground(colorScheme))
             .navigationTitle("Tableau de bord")
+            .toolbarBackground(Color.limeToSky, for: .navigationBar)
             .refreshable {
                 budgetManager.loadData()
                 weatherManager.loadWeather()
@@ -44,99 +50,251 @@ struct DashboardView: View {
     }
 }
 
-// MARK: - StatsCardsView avec polices Space Grotesk
-struct StatsCardsView: View {
+// MARK: - Widget de Santé Financière Rétro
+struct FinancialHealthWidget: View {
     @EnvironmentObject var budgetManager: BudgetManager
+    @Environment(\.colorScheme) private var colorScheme
+    
+    private var healthScore: Double {
+        // Calcul simple de santé financière
+        let positiveBalance = budgetManager.resteDisponible > 0 ? 0.5 : 0.0
+        let budgetRespected = TransactionCategory.allCases.filter {
+            budgetManager.progressionBudget($0) <= 1.0
+        }.count
+        let budgetScore = Double(budgetRespected) / Double(TransactionCategory.allCases.count) * 0.5
+        
+        return min(positiveBalance + budgetScore, 1.0)
+    }
+    
+    private var healthColor: Color {
+        if healthScore >= 0.8 { return Color.limeElectric }
+        else if healthScore >= 0.6 { return Color.peachSunset }
+        else { return Color.softCoral }
+    }
+    
+    private var healthMessage: String {
+        if healthScore >= 0.8 { return "Excellente santé financière ! 🎉" }
+        else if healthScore >= 0.6 { return "Bonne gestion, améliorations possibles" }
+        else { return "Attention requise sur vos finances" }
+    }
     
     var body: some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 15) {
-            StatCard(
+        VStack(spacing: 16) {
+            HStack {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("💊 Santé Financière")
+                        .font(.appHeadline)
+                        .fontWeight(.bold)
+                        .foregroundColor(Color.adaptiveText(colorScheme))
+                    
+                    Text(healthMessage)
+                        .font(.appSubheadline)
+                        .foregroundColor(healthColor)
+                }
+                
+                Spacer()
+                
+                // Score circulaire rétro
+                ZStack {
+                    Circle()
+                        .stroke(healthColor.opacity(0.2), lineWidth: 8)
+                        .frame(width: 70, height: 70)
+                    
+                    Circle()
+                        .trim(from: 0, to: healthScore)
+                        .stroke(
+                            AngularGradient(
+                                colors: [healthColor, healthColor.opacity(0.6)],
+                                center: .center,
+                                startAngle: .degrees(-90),
+                                endAngle: .degrees(270)
+                            ),
+                            style: StrokeStyle(lineWidth: 8, lineCap: .round)
+                        )
+                        .frame(width: 70, height: 70)
+                        .rotationEffect(.degrees(-90))
+                    
+                    Text("\(Int(healthScore * 100))%")
+                        .font(.appHeadline)
+                        .fontWeight(.bold)
+                        .foregroundColor(healthColor)
+                }
+            }
+            
+            // Prochains objectifs
+            if let nextGoal = budgetManager.transactions.isEmpty ? nil : "Ajouter un objectif d'épargne" {
+                HStack {
+                    Image(systemName: "target")
+                        .foregroundColor(Color.skyBlueRetro)
+                    
+                    Text("Prochain objectif: \(nextGoal)")
+                        .font(.appCaption)
+                        .foregroundColor(.secondary)
+                    
+                    Spacer()
+                }
+            }
+        }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.sunsetGlow.opacity(0.1))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.khakiGold.opacity(0.4), lineWidth: 1.5)
+                )
+        )
+        .shadow(color: Color.khakiGold.opacity(0.2), radius: 10, x: 0, y: 5)
+    }
+}
+
+// MARK: - StatsCardsView avec design rétro
+struct StatsCardsView: View {
+    @EnvironmentObject var budgetManager: BudgetManager
+    @Environment(\.colorScheme) private var colorScheme
+    
+    var body: some View {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 20) {
+            RetroStatCard(
                 title: "Revenus totaux",
                 value: budgetManager.totalRevenus,
                 icon: "banknote.fill",
-                color: .blue
+                gradient: Color.limeToSky,
+                accentColor: Color.limeElectric
             )
             
-            StatCard(
+            RetroStatCard(
                 title: "Dépenses ce mois",
                 value: budgetManager.depensesMoisCourant,
                 icon: "creditcard.fill",
-                color: .red
+                gradient: Color.pinkDreams,
+                accentColor: Color.pinkBubblegum
             )
             
-            StatCard(
+            RetroStatCard(
                 title: "Budget alloué",
                 value: budgetManager.totalBudgets,
                 icon: "chart.pie.fill",
-                color: .orange
+                gradient: Color.sunsetGlow,
+                accentColor: Color.peachSunset
             )
             
-            StatCard(
+            RetroStatCard(
                 title: "Reste disponible",
                 value: budgetManager.resteDisponible,
                 icon: "dollarsign.circle.fill",
-                color: budgetManager.resteDisponible >= 0 ? .green : .red
+                gradient: budgetManager.resteDisponible >= 0 ? Color.limeToSky : Color.pinkDreams,
+                accentColor: budgetManager.resteDisponible >= 0 ? Color.limeElectric : Color.softCoral
             )
         }
     }
 }
 
-struct StatCard: View {
+struct RetroStatCard: View {
     let title: String
     let value: Double
     let icon: String
-    let color: Color
+    let gradient: LinearGradient
+    let accentColor: Color
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 12) {
             HStack {
-                Image(systemName: icon)
-                    .foregroundColor(color)
-                    .font(.title2)
+                // Icône avec fond rétro
+                ZStack {
+                    Circle()
+                        .fill(gradient)
+                        .frame(width: 40, height: 40)
+                    
+                    Image(systemName: icon)
+                        .foregroundColor(Color.brownDeep)
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                }
+                
                 Spacer()
+                
+                // Indicateur de tendance
+                Image(systemName: value >= 0 ? "arrow.up.right" : "arrow.down.right")
+                    .foregroundColor(accentColor)
+                    .font(.caption)
+                    .fontWeight(.bold)
             }
             
-            VStack(alignment: .leading, spacing: 4) {
-                // ✅ Police Space Grotesk Bold pour les montants
+            VStack(alignment: .leading, spacing: 6) {
                 Text(value.formatted(.currency(code: "EUR")))
-                    .font(.currencyMedium) // Space Grotesk SemiBold 20pt
+                    .font(.currencyMedium)
                     .fontWeight(.bold)
+                    .foregroundColor(Color.adaptiveText(colorScheme))
                 
-                // ✅ Police Space Grotesk Regular pour les titres
                 Text(title)
-                    .font(.appFootnote) // Space Grotesk Regular 13pt
+                    .font(.appFootnote)
                     .foregroundColor(.secondary)
+                    .multilineTextAlignment(.leading)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding()
-        .background(Color.gray.opacity(0.1))
-        .cornerRadius(12)
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.adaptiveSurface(colorScheme))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(accentColor.opacity(0.3), lineWidth: 1)
+                )
+        )
+        .shadow(color: accentColor.opacity(0.15), radius: 8, x: 0, y: 4)
     }
 }
 
+// MARK: - BudgetProgressView avec style rétro
 struct BudgetProgressView: View {
     @EnvironmentObject var budgetManager: BudgetManager
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 15) {
-            // ✅ Police Space Grotesk Bold pour les titres de section
-            Text("🎯 Suivi des budgets")
-                .font(.appTitle3) // Space Grotesk SemiBold 20pt
-                .fontWeight(.bold)
+        VStack(alignment: .leading, spacing: 20) {
+            HStack {
+                Text("🎯 Suivi des budgets")
+                    .font(.appTitle3)
+                    .fontWeight(.bold)
+                    .foregroundColor(Color.adaptiveText(colorScheme))
+                
+                Spacer()
+                
+                // Badge du mois courant
+                Text(Date().formatted(.dateTime.month(.wide)))
+                    .font(.appCaption)
+                    .fontWeight(.semibold)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.skyBlueRetro.opacity(0.2))
+                    .foregroundColor(Color.skyBlueRetro)
+                    .cornerRadius(12)
+            }
             
             ForEach(TransactionCategory.allCases, id: \.self) { category in
-                BudgetProgressRow(category: category)
+                RetroBudgetProgressRow(category: category)
             }
         }
-        .padding()
-        .background(Color.gray.opacity(0.05))
-        .cornerRadius(12)
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.adaptiveSurface(colorScheme))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.plumVintage.opacity(0.2), lineWidth: 1)
+                )
+        )
+        .shadow(color: Color.plumVintage.opacity(0.1), radius: 10, x: 0, y: 5)
     }
 }
 
-struct BudgetProgressRow: View {
+struct RetroBudgetProgressRow: View {
     @EnvironmentObject var budgetManager: BudgetManager
     let category: TransactionCategory
+    @Environment(\.colorScheme) private var colorScheme
     
     var budget: Double {
         budgetManager.budgets.budgetForCategory(category)
@@ -154,66 +312,164 @@ struct BudgetProgressRow: View {
         max(budget - spent, 0)
     }
     
+    var categoryColor: Color {
+        switch category {
+        case .alimentation: return Color.limeElectric
+        case .loyer: return Color.skyBlueRetro
+        case .abonnements: return Color.plumVintage
+        case .habitation: return Color.peachSunset
+        case .sorties: return Color.pinkBubblegum
+        case .credits: return Color.richBrown
+        case .epargne: return Color.khakiGold
+        case .transports: return Color.turquoiseVintage
+        }
+    }
+    
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 12) {
             HStack {
-                // ✅ Police Space Grotesk Medium pour les noms de catégorie
-                Text(category.displayName)
-                    .font(.appSubheadline) // Space Grotesk Medium 15pt
-                    .fontWeight(.medium)
+                // Icône de catégorie avec style rétro
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(categoryColor.opacity(0.2))
+                        .frame(width: 32, height: 32)
+                    
+                    Text(category.icon)
+                        .font(.title3)
+                }
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(category.displayName.dropFirst(2))
+                        .font(.appSubheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(Color.adaptiveText(colorScheme))
+                    
+                    Text("Reste: \(remaining.formatted(.currency(code: "EUR")))")
+                        .font(.appCaption2)
+                        .foregroundColor(.secondary)
+                }
                 
                 Spacer()
                 
-                VStack(alignment: .trailing, spacing: 2) {
-                    // ✅ Police Space Grotesk Medium pour les montants de budget
-                    Text("\(spent.formatted(.currency(code: "EUR"))) / \(budget.formatted(.currency(code: "EUR")))")
-                        .font(.currencySmall) // Space Grotesk Medium 16pt
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("\(spent.formatted(.currency(code: "EUR")))")
+                        .font(.currencySmall)
+                        .fontWeight(.bold)
+                        .foregroundColor(progressColor)
                     
-                    // ✅ Police Space Grotesk Regular pour les détails
-                    Text("Reste: \(remaining.formatted(.currency(code: "EUR")))")
-                        .font(.appCaption2) // Space Grotesk Light 11pt
+                    Text("/ \(budget.formatted(.currency(code: "EUR")))")
+                        .font(.appCaption)
                         .foregroundColor(.secondary)
                 }
             }
             
-            ProgressView(value: progress)
-                .progressViewStyle(LinearProgressViewStyle(tint: progressColor))
+            // Barre de progression rétro
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(categoryColor.opacity(0.15))
+                    .frame(height: 8)
+                
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(
+                        LinearGradient(
+                            colors: [categoryColor, categoryColor.opacity(0.7)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(width: max(0, CGFloat(min(progress, 1.0)) * 300), height: 8)
+                
+                // Effet de surbrillance
+                if progress > 1.0 {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.softCoral)
+                        .frame(width: 300, height: 8)
+                        .opacity(0.8)
+                }
+            }
+            
+            // Pourcentage avec style rétro
+            HStack {
+                Text("\(Int(progress * 100))%")
+                    .font(.appCaption)
+                    .fontWeight(.bold)
+                    .foregroundColor(progressColor)
+                
+                Spacer()
+                
+                if progress > 1.0 {
+                    Text("DÉPASSÉ")
+                        .font(.appCaption2)
+                        .fontWeight(.bold)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(Color.softCoral.opacity(0.2))
+                        .foregroundColor(Color.softCoral)
+                        .cornerRadius(6)
+                } else if progress > 0.9 {
+                    Text("ATTENTION")
+                        .font(.appCaption2)
+                        .fontWeight(.bold)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(Color.peachSunset.opacity(0.2))
+                        .foregroundColor(Color.peachSunset)
+                        .cornerRadius(6)
+                }
+            }
         }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(categoryColor.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(categoryColor.opacity(0.2), lineWidth: 1)
+                )
+        )
     }
     
     var progressColor: Color {
-        if progress > 1.0 { return .red }
-        if progress > 0.9 { return .orange }
-        return category.color
+        if progress > 1.0 { return Color.softCoral }
+        if progress > 0.9 { return Color.peachSunset }
+        return categoryColor
     }
 }
 
+// MARK: - AlertsView avec style rétro
 struct AlertsView: View {
     @EnvironmentObject var budgetManager: BudgetManager
+    @Environment(\.colorScheme) private var colorScheme
     
-    var alerts: [AlertItem] {
-        var items: [AlertItem] = []
+    var alerts: [RetroAlertItem] {
+        var items: [RetroAlertItem] = []
         
         for category in TransactionCategory.allCases {
             let progress = budgetManager.progressionBudget(category)
             
             if progress > 1.0 {
-                items.append(AlertItem(
+                items.append(RetroAlertItem(
                     type: .danger,
-                    message: "⚠️ Budget dépassé pour \(category.displayName.dropFirst(2)) : \(((progress - 1.0) * 100).formatted(.number.precision(.fractionLength(1))))% de dépassement"
+                    title: "Budget dépassé",
+                    message: "\(category.displayName.dropFirst(2)) : +\(((progress - 1.0) * 100).formatted(.number.precision(.fractionLength(1))))%",
+                    icon: "exclamationmark.triangle.fill"
                 ))
             } else if progress > 0.9 {
-                items.append(AlertItem(
+                items.append(RetroAlertItem(
                     type: .warning,
-                    message: "🔶 Attention : \(category.displayName.dropFirst(2)) à \((progress * 100).formatted(.number.precision(.fractionLength(1))))% du budget"
+                    title: "Attention budget",
+                    message: "\(category.displayName.dropFirst(2)) à \((progress * 100).formatted(.number.precision(.fractionLength(1))))%",
+                    icon: "eye.fill"
                 ))
             }
         }
         
         if items.isEmpty {
-            items.append(AlertItem(
+            items.append(RetroAlertItem(
                 type: .success,
-                message: "✅ Tous vos budgets sont sous contrôle !"
+                title: "Tout va bien !",
+                message: "Tous vos budgets sont sous contrôle",
+                icon: "checkmark.circle.fill"
             ))
         }
         
@@ -221,140 +477,229 @@ struct AlertsView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            // ✅ Police Space Grotesk Bold pour les titres de section
-            Text("🔔 Alertes et notifications")
-                .font(.appTitle3) // Space Grotesk SemiBold 20pt
-                .fontWeight(.bold)
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("🔔 Alertes")
+                    .font(.appTitle3)
+                    .fontWeight(.bold)
+                    .foregroundColor(Color.adaptiveText(colorScheme))
+                
+                Spacer()
+                
+                Text("\(alerts.count)")
+                    .font(.appCaption)
+                    .fontWeight(.bold)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.limeElectric.opacity(0.2))
+                    .foregroundColor(Color.limeElectric)
+                    .cornerRadius(8)
+            }
             
-            ForEach(alerts) { alert in
-                AlertCard(alert: alert)
+            LazyVStack(spacing: 12) {
+                ForEach(alerts) { alert in
+                    RetroAlertCard(alert: alert)
+                }
             }
         }
-        .padding()
-        .background(Color.gray.opacity(0.05))
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.adaptiveSurface(colorScheme))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.limeElectric.opacity(0.2), lineWidth: 1)
+                )
+        )
+        .shadow(color: Color.limeElectric.opacity(0.1), radius: 10, x: 0, y: 5)
+    }
+}
+
+struct RetroAlertItem: Identifiable {
+    let id = UUID()
+    let type: RetroAlertType
+    let title: String
+    let message: String
+    let icon: String
+}
+
+struct RetroAlertCard: View {
+    let alert: RetroAlertItem
+    @Environment(\.colorScheme) private var colorScheme
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Icône avec fond coloré
+            ZStack {
+                Circle()
+                    .fill(alert.type.accentColor.opacity(0.2))
+                    .frame(width: 40, height: 40)
+                
+                Image(systemName: alert.icon)
+                    .foregroundColor(alert.type.accentColor)
+                    .font(.title3)
+                    .fontWeight(.semibold)
+            }
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(alert.title)
+                    .font(.appSubheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(Color.adaptiveText(colorScheme))
+                
+                Text(alert.message)
+                    .font(.appCaption)
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+        }
+        .padding(16)
+        .background(alert.type.backgroundColor)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(alert.type.accentColor.opacity(0.3), lineWidth: 1)
+        )
         .cornerRadius(12)
     }
 }
 
-struct AlertItem: Identifiable {
-    let id = UUID()
-    let type: AlertType
-    let message: String
-}
-
-enum AlertType {
-    case success, warning, danger
-    
-    var color: Color {
-        switch self {
-        case .success: return .green
-        case .warning: return .orange
-        case .danger: return .red
-        }
-    }
-}
-
-struct AlertCard: View {
-    let alert: AlertItem
-    
-    var body: some View {
-        // ✅ Police Space Grotesk Regular pour les messages d'alerte
-        Text(alert.message)
-            .font(.appCallout) // Space Grotesk Regular 16pt
-            .padding()
-            .background(alert.type.color.opacity(0.1))
-            .foregroundColor(alert.type.color)
-            .cornerRadius(8)
-    }
-}
-
+// MARK: - RecentTransactionsView avec style rétro
 struct RecentTransactionsView: View {
     @EnvironmentObject var budgetManager: BudgetManager
+    @Environment(\.colorScheme) private var colorScheme
     
     var recentTransactions: [Transaction] {
         Array(budgetManager.transactions.prefix(5))
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 15) {
+        VStack(alignment: .leading, spacing: 20) {
             HStack {
-                // ✅ Police Space Grotesk Bold pour les titres de section
                 Text("💳 Transactions récentes")
-                    .font(.appTitle3) // Space Grotesk SemiBold 20pt
+                    .font(.appTitle3)
                     .fontWeight(.bold)
+                    .foregroundColor(Color.adaptiveText(colorScheme))
                 
                 Spacer()
                 
                 NavigationLink("Voir tout") {
                     TransactionsView()
                 }
-                .font(.appCaption) // Space Grotesk Regular 12pt
+                .font(.appCaption)
+                .fontWeight(.semibold)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.turquoiseVintage.opacity(0.2))
+                .foregroundColor(Color.turquoiseVintage)
+                .cornerRadius(12)
             }
             
             if recentTransactions.isEmpty {
-                // ✅ Police Space Grotesk Regular pour le texte d'état vide
-                Text("Aucune transaction")
-                    .font(.appBody) // Space Grotesk Regular 17pt
-                    .foregroundColor(.secondary)
-                    .padding()
+                VStack(spacing: 12) {
+                    Image(systemName: "creditcard.trianglebadge.exclamationmark")
+                        .font(.system(size: 40))
+                        .foregroundColor(Color.dimGray)
+                    
+                    Text("Aucune transaction")
+                        .font(.appBody)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(30)
             } else {
-                ForEach(recentTransactions) { transaction in
-                    TransactionRowView(transaction: transaction)
+                LazyVStack(spacing: 12) {
+                    ForEach(recentTransactions) { transaction in
+                        RetroTransactionRowView(transaction: transaction)
+                    }
                 }
             }
         }
-        .padding()
-        .background(Color.gray.opacity(0.05))
-        .cornerRadius(12)
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.adaptiveSurface(colorScheme))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.turquoiseVintage.opacity(0.2), lineWidth: 1)
+                )
+        )
+        .shadow(color: Color.turquoiseVintage.opacity(0.1), radius: 10, x: 0, y: 5)
     }
 }
 
-struct TransactionRowView: View {
+struct RetroTransactionRowView: View {
     let transaction: Transaction
+    @Environment(\.colorScheme) private var colorScheme
+    
+    private var categoryColor: Color {
+        switch transaction.category {
+        case .alimentation: return Color.limeElectric
+        case .loyer: return Color.skyBlueRetro
+        case .abonnements: return Color.plumVintage
+        case .habitation: return Color.peachSunset
+        case .sorties: return Color.pinkBubblegum
+        case .credits: return Color.richBrown
+        case .epargne: return Color.khakiGold
+        case .transports: return Color.turquoiseVintage
+        }
+    }
     
     var body: some View {
-        HStack {
-            Text(transaction.category.icon)
-                .font(.title2)
-            
-            VStack(alignment: .leading, spacing: 2) {
-                // ✅ Police Space Grotesk Medium pour les descriptions de transaction
-                Text(transaction.description)
-                    .font(.appSubheadline) // Space Grotesk Medium 15pt
-                    .fontWeight(.medium)
+        HStack(spacing: 12) {
+            // Icône de catégorie stylée
+            ZStack {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(categoryColor.opacity(0.2))
+                    .frame(width: 44, height: 44)
                 
-                HStack {
-                    // ✅ Police Space Grotesk Regular pour les détails secondaires
+                Text(transaction.category.icon)
+                    .font(.title2)
+            }
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(transaction.description)
+                    .font(.appSubheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(Color.adaptiveText(colorScheme))
+                    .lineLimit(1)
+                
+                HStack(spacing: 8) {
                     Text(transaction.category.displayName.dropFirst(2))
-                        .font(.appCaption) // Space Grotesk Regular 12pt
-                        .foregroundColor(.secondary)
-                    
-                    Text("•")
                         .font(.appCaption)
-                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(categoryColor.opacity(0.15))
+                        .foregroundColor(categoryColor)
+                        .cornerRadius(6)
                     
                     Text(transaction.payer.displayName.dropFirst(2))
-                        .font(.appCaption) // Space Grotesk Regular 12pt
+                        .font(.appCaption)
                         .foregroundColor(.secondary)
                 }
             }
             
             Spacer()
             
-            VStack(alignment: .trailing, spacing: 2) {
-                // ✅ Police Space Grotesk SemiBold pour les montants
+            VStack(alignment: .trailing, spacing: 4) {
                 Text("-\(transaction.amount.formatted(.currency(code: "EUR")))")
-                    .font(.currencySmall) // Space Grotesk Medium 16pt
-                    .fontWeight(.semibold)
-                    .foregroundColor(.red)
+                    .font(.currencySmall)
+                    .fontWeight(.bold)
+                    .foregroundColor(Color.softCoral)
                 
-                // ✅ Police Space Grotesk Light pour les dates
                 Text(transaction.date.formatted(.dateTime.day().month().year()))
-                    .font(.appCaption2) // Space Grotesk Light 11pt
+                    .font(.appCaption2)
                     .foregroundColor(.secondary)
             }
         }
-        .padding(.vertical, 4)
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(categoryColor.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(categoryColor.opacity(0.1), lineWidth: 1)
+                )
+        )
     }
 }
