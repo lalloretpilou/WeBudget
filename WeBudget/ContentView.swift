@@ -20,12 +20,6 @@ struct ContentView: View {
                             Text("Dépenses")
                         }
                     
-                    StatisticsView()
-                        .tabItem {
-                            Image(systemName: "chart.bar.fill")
-                            Text("Stats")
-                        }
-                    
                     SettingsView()
                         .tabItem {
                             Image(systemName: "slider.horizontal.3")

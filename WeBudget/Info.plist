@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>CFBundleGetInfoString</key>
-	<string></string>
-    <key>UIAppFonts</key>
+    <dict>
+        <key>CFBundleGetInfoString</key>
+        <string></string>
+        <key>UIAppFonts</key>
         <array>
             <string>SpaceGrotesk-Bold.ttf</string>
             <string>SpaceGrotesk-Light.ttf</string>
@@ -12,5 +12,7 @@
             <string>SpaceGrotesk-Regular.ttf</string>
             <string>SpaceGrotesk-SemiBold.ttf</string>
         </array>
-</dict>
+        <key>com.apple.developer.cloudkit-share-support</key>
+        <true/>
+    </dict>
 </plist>

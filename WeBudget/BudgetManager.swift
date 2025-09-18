@@ -1,7 +1,8 @@
-// BudgetManager.swift - Version étendue
+// BudgetManager.swift - Version corrigée sans redéclarations
 import Foundation
 import CloudKit
 import Combine
+import SwiftUI
 
 class BudgetManager: ObservableObject {
     // Propriétés existantes
@@ -18,18 +19,33 @@ class BudgetManager: ObservableObject {
     @Published var savingsGoals: [SavingsGoal] = []
     @Published var savingsContributions: [SavingsContribution] = []
     
+    // PROPRIÉTÉS POUR LE PARTAGE
+    @Published var isUsingSharedDatabase = false
+    @Published var sharingStatus = "Vérification du partage..."
+    
     private let container = CKContainer(identifier: "iCloud.com.budget.nous")
+    private let customZone = CKRecordZone(zoneName: "CoupleDataZone")
+    
     private var database: CKDatabase {
         container.privateCloudDatabase
     }
     
-    init() {
-        checkAuthentication()
-        // Démarrer la vérification des dépenses récurrentes
-        startRecurringExpenseMonitoring()
+    private var sharedDatabase: CKDatabase {
+        container.sharedCloudDatabase
     }
     
-    // MARK: - Computed Properties existantes (inchangées)
+    private var targetDatabase: CKDatabase {
+        return isUsingSharedDatabase ? sharedDatabase : database
+    }
+    
+    init() {
+        checkAuthentication()
+        startRecurringExpenseMonitoring()
+        setupSharingSupport()
+    }
+    
+    // MARK: - Computed Properties
+    
     var totalRevenus: Double {
         salaires.pilou + salaires.doudou
     }
@@ -47,12 +63,57 @@ class BudgetManager: ObservableObject {
     }
     
     var resteDisponible: Double {
-        totalRevenus - depensesMoisCourant - totalMonthlyRecurring - totalMonthlySavingsGoals
-    }
+         // Revenus totaux
+         let totalRevenus = salaires.pilou + salaires.doudou
+         
+         // Dépenses réelles du mois courant
+         let depensesReelles = depensesMoisCourant
+         
+         // Budgets alloués (charges communes)
+         let budgetsAlloues = totalBudgets
+         
+         // Dépenses récurrentes mensuelles
+         let depensesRecurrentes = totalMonthlyRecurring
+         
+         // Contributions d'épargne mensuelles
+         let contributionsEpargne = totalMonthlySavingsGoals
+         
+         // Calcul correct : Revenus - Budgets alloués - Dépenses récurrentes - Contributions épargne
+         // Ce qui reste c'est ce qui peut être redistribué aux comptes personnels
+         return totalRevenus - budgetsAlloues - depensesRecurrentes - contributionsEpargne
+     }
     
-    // NOUVELLES COMPUTED PROPERTIES
+    // NOUVEAU: Montant réellement disponible pour dépenses personnelles
+        var resteRealmentDisponible: Double {
+            let totalRevenus = salaires.pilou + salaires.doudou
+            
+            // Total des dépenses "réelles" : ce qui a été effectivement dépensé
+            let totalDepensesReelles = depensesMoisCourant + totalMonthlyRecurring + totalMonthlySavingsGoals
+            
+            return totalRevenus - totalDepensesReelles
+        }
+        
+        // NOUVEAU: Calcul de la redistribution par personne (ce qui va sur les comptes perso)
+        var redistributionPilou: Double {
+            guard totalRevenus > 0 else { return 0 }
+            return resteDisponible * (salaires.pilou / totalRevenus)
+        }
+        
+        var redistributionDoudou: Double {
+            guard totalRevenus > 0 else { return 0 }
+            return resteDisponible * (salaires.doudou / totalRevenus)
+        }
+        
+        // NOUVEAU: Santé financière corrigée
+        var santeBudgetaire: FinancialHealth {
+            let pourcentageDepense = totalRevenus > 0 ? (depensesMoisCourant + totalMonthlyRecurring + totalMonthlySavingsGoals) / totalRevenus : 0
+            
+            if pourcentageDepense < 0.7 { return .excellent }
+            else if pourcentageDepense < 0.85 { return .bonne }
+            else if pourcentageDepense < 1.0 { return .attention }
+            else { return .danger }
+        }
     
-    // Total des dépenses récurrentes mensuelles
     var totalMonthlyRecurring: Double {
         return recurringExpenses
             .filter { $0.isActive }
@@ -61,24 +122,20 @@ class BudgetManager: ObservableObject {
             }
     }
     
-    // Total des contributions d'épargne mensuelles
     var totalMonthlySavingsGoals: Double {
         return savingsGoals
             .filter { $0.isActive }
             .reduce(0) { $0 + $1.monthlyContribution }
     }
     
-    // Dépenses récurrentes dues
     var dueRecurringExpenses: [RecurringExpense] {
         return recurringExpenses.filter { $0.isDue }
     }
     
-    // Objectifs d'épargne en retard
     var behindScheduleGoals: [SavingsGoal] {
         return savingsGoals.filter { $0.status == .behindSchedule }
     }
     
-    // Total épargné cette année
     var totalSavedThisYear: Double {
         let calendar = Calendar.current
         let currentYear = calendar.component(.year, from: Date())
@@ -86,6 +143,89 @@ class BudgetManager: ObservableObject {
         return savingsContributions
             .filter { calendar.component(.year, from: $0.date) == currentYear }
             .reduce(0) { $0 + $1.amount }
+    }
+    
+    // NOUVEAU: Enum pour la santé financière
+    enum FinancialHealth: String, CaseIterable {
+        case excellent = "Excellente"
+        case bonne = "Bonne"
+        case attention = "Attention"
+        case danger = "Critique"
+        
+        var color: Color {
+            switch self {
+            case .excellent: return .limeElectric
+            case .bonne: return .skyBlueRetro
+            case .attention: return .peachSunset
+            case .danger: return .softCoral
+            }
+        }
+        
+        var icon: String {
+            switch self {
+            case .excellent: return "checkmark.circle.fill"
+            case .bonne: return "hand.thumbsup.fill"
+            case .attention: return "exclamationmark.triangle.fill"
+            case .danger: return "xmark.circle.fill"
+            }
+        }
+        
+        var message: String {
+            switch self {
+            case .excellent: return "Vos finances sont parfaitement maîtrisées ! 🎉"
+            case .bonne: return "Bonne gestion, continuez ainsi ! 👍"
+            case .attention: return "Surveillez vos dépenses ce mois-ci 👀"
+            case .danger: return "Budget en danger, réduisez les dépenses ! ⚠️"
+            }
+        }
+    }
+    
+    // MARK: - Méthodes utilitaires pour les zones CloudKit
+    
+    private func performQuery(_ query: CKQuery, completion: @escaping ([CKRecord]?, Error?) -> Void) {
+        if isUsingSharedDatabase {
+            // Pour la base partagée, pas de zone personnalisée
+            if #available(iOS 15.0, *) {
+                sharedDatabase.fetch(withQuery: query, inZoneWith: nil, desiredKeys: nil, resultsLimit: CKQueryOperation.maximumResults) { result in
+                    switch result {
+                    case .success(let response):
+                        let records = response.matchResults.compactMap { (_, result) -> CKRecord? in
+                            try? result.get()
+                        }
+                        completion(records, nil)
+                    case .failure(let error):
+                        completion(nil, error)
+                    }
+                }
+            } else {
+                sharedDatabase.perform(query, inZoneWith: nil, completionHandler: completion)
+            }
+        } else {
+            // Pour la base privée, utiliser la zone personnalisée
+            if #available(iOS 15.0, *) {
+                database.fetch(withQuery: query, inZoneWith: customZone.zoneID, desiredKeys: nil, resultsLimit: CKQueryOperation.maximumResults) { result in
+                    switch result {
+                    case .success(let response):
+                        let records = response.matchResults.compactMap { (_, result) -> CKRecord? in
+                            try? result.get()
+                        }
+                        completion(records, nil)
+                    case .failure(let error):
+                        completion(nil, error)
+                    }
+                }
+            } else {
+                database.perform(query, inZoneWith: customZone.zoneID, completionHandler: completion)
+            }
+        }
+    }
+    
+    private func createRecordID(recordName: String) -> CKRecord.ID {
+        if isUsingSharedDatabase {
+            return CKRecord.ID(recordName: recordName)
+        } else {
+            return CKRecord.ID(recordName: recordName, zoneID: customZone.zoneID)
+        }
     }
     
     // MARK: - Gestion des Dépenses Récurrentes
@@ -108,7 +248,6 @@ class BudgetManager: ObservableObject {
     }
     
     func processRecurringExpense(_ expense: RecurringExpense) {
-        // Créer une transaction pour cette dépense récurrente
         let transaction = Transaction(
             date: expense.nextDueDate,
             description: "♻️ \(expense.description)",
@@ -119,8 +258,6 @@ class BudgetManager: ObservableObject {
         
         saveTransaction(transaction)
         
-        // Mettre à jour la prochaine échéance
-        var updatedExpense = expense
         let newExpense = RecurringExpense(
             id: expense.id,
             description: expense.description,
@@ -138,12 +275,9 @@ class BudgetManager: ObservableObject {
     }
     
     private func startRecurringExpenseMonitoring() {
-        // Vérifier toutes les heures s'il y a des dépenses récurrentes à traiter
         Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { [weak self] _ in
             self?.checkAndProcessRecurringExpenses()
         }
-        
-        // Vérification immédiate au démarrage
         checkAndProcessRecurringExpenses()
     }
     
@@ -171,7 +305,6 @@ class BudgetManager: ObservableObject {
     
     func deleteSavingsGoal(_ goal: SavingsGoal) {
         savingsGoals.removeAll { $0.id == goal.id }
-        // Supprimer aussi les contributions associées
         savingsContributions.removeAll { $0.goalId == goal.id }
         deleteSavingsGoalFromCloudKit(goal)
     }
@@ -180,7 +313,6 @@ class BudgetManager: ObservableObject {
         let contribution = SavingsContribution(goalId: goalId, amount: amount, note: note)
         savingsContributions.append(contribution)
         
-        // Mettre à jour le montant de l'objectif
         if let index = savingsGoals.firstIndex(where: { $0.id == goalId }) {
             let goal = savingsGoals[index]
             let updatedGoal = SavingsGoal(
@@ -203,12 +335,14 @@ class BudgetManager: ObservableObject {
         saveSavingsContribution(contribution)
     }
     
-    // MARK: - CloudKit - Nouvelles méthodes de sauvegarde
+    // MARK: - CloudKit - Sauvegarde
     
     private func saveRecurringExpense(_ expense: RecurringExpense) {
         guard isAuthenticated else { return }
         
-        let record = CKRecord(recordType: "RecurringExpense")
+        let recordID = createRecordID(recordName: expense.id.uuidString)
+        let record = CKRecord(recordType: "RecurringExpense", recordID: recordID)
+        
         record["id"] = expense.id.uuidString
         record["description"] = expense.description
         record["amount"] = expense.amount
@@ -217,13 +351,13 @@ class BudgetManager: ObservableObject {
         record["frequency"] = expense.frequency.rawValue
         record["startDate"] = expense.startDate
         record["nextDueDate"] = expense.nextDueDate
-        record["isActive"] = expense.isActive
-        record["autoGenerate"] = expense.autoGenerate
+        record["isActive"] = Int64(expense.isActive ? 1 : 0)
+        record["autoGenerate"] = Int64(expense.autoGenerate ? 1 : 0)
         if let endDate = expense.endDate {
             record["endDate"] = endDate
         }
         
-        database.save(record) { _, error in
+        targetDatabase.save(record) { _, error in
             if let error = error {
                 print("❌ Erreur sauvegarde dépense récurrente: \(error)")
             } else {
@@ -235,7 +369,9 @@ class BudgetManager: ObservableObject {
     private func saveSavingsGoal(_ goal: SavingsGoal) {
         guard isAuthenticated else { return }
         
-        let record = CKRecord(recordType: "SavingsGoal")
+        let recordID = createRecordID(recordName: goal.id.uuidString)
+        let record = CKRecord(recordType: "SavingsGoal", recordID: recordID)
+        
         record["id"] = goal.id.uuidString
         record["name"] = goal.name
         record["description"] = goal.description
@@ -246,9 +382,9 @@ class BudgetManager: ObservableObject {
         record["category"] = goal.category.rawValue
         record["priority"] = goal.priority.rawValue
         record["monthlyContribution"] = goal.monthlyContribution
-        record["isActive"] = goal.isActive
+        record["isActive"] = Int64(goal.isActive ? 1 : 0)
         
-        database.save(record) { _, error in
+        targetDatabase.save(record) { _, error in
             if let error = error {
                 print("❌ Erreur sauvegarde objectif épargne: \(error)")
             } else {
@@ -260,7 +396,9 @@ class BudgetManager: ObservableObject {
     private func saveSavingsContribution(_ contribution: SavingsContribution) {
         guard isAuthenticated else { return }
         
-        let record = CKRecord(recordType: "SavingsContribution")
+        let recordID = createRecordID(recordName: contribution.id.uuidString)
+        let record = CKRecord(recordType: "SavingsContribution", recordID: recordID)
+        
         record["id"] = contribution.id.uuidString
         record["goalId"] = contribution.goalId.uuidString
         record["amount"] = contribution.amount
@@ -269,11 +407,51 @@ class BudgetManager: ObservableObject {
             record["note"] = note
         }
         
-        database.save(record) { _, error in
+        targetDatabase.save(record) { _, error in
             if let error = error {
                 print("❌ Erreur sauvegarde contribution: \(error)")
             } else {
                 print("✅ Contribution sauvegardée")
+            }
+        }
+    }
+    
+    func saveTransaction(_ transaction: Transaction) {
+        guard isAuthenticated else {
+            print("⚠️ Tentative de sauvegarde sans authentification")
+            errorMessage = "Non authentifié - connectez-vous à iCloud"
+            return
+        }
+        
+        print("💾 Sauvegarde transaction dans base \(isUsingSharedDatabase ? "partagée" : "privée")")
+        
+        if !transactions.contains(where: { $0.id == transaction.id }) {
+            transactions.insert(transaction, at: 0)
+        }
+        
+        let recordID = createRecordID(recordName: transaction.id.uuidString)
+        let record = CKRecord(recordType: "Transaction", recordID: recordID)
+        
+        record["id"] = transaction.id.uuidString
+        record["date"] = transaction.date
+        record["description"] = transaction.description
+        record["category"] = transaction.category.rawValue
+        record["amount"] = transaction.amount
+        record["payer"] = transaction.payer.rawValue
+        
+        targetDatabase.save(record) { [weak self] record, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    print("❌ Erreur sauvegarde transaction: \(error)")
+                    self?.errorMessage = "Erreur sauvegarde: \(error.localizedDescription)"
+                    self?.transactions.removeAll { $0.id == transaction.id }
+                    
+                    if let ckError = error as? CKError, ckError.code == .notAuthenticated {
+                        self?.checkAuthentication()
+                    }
+                } else {
+                    print("✅ Transaction sauvegardée dans base \(self?.isUsingSharedDatabase == true ? "partagée" : "privée")")
+                }
             }
         }
     }
@@ -284,7 +462,7 @@ class BudgetManager: ObservableObject {
         let predicate = NSPredicate(format: "id == %@", expense.id.uuidString)
         let query = CKQuery(recordType: "RecurringExpense", predicate: predicate)
         
-        database.perform(query, inZoneWith: nil) { [weak self] records, error in
+        performQuery(query) { [weak self] records, error in
             guard let records = records, !records.isEmpty else { return }
             
             let deleteOperation = CKModifyRecordsOperation(
@@ -292,7 +470,7 @@ class BudgetManager: ObservableObject {
                 recordIDsToDelete: records.map { $0.recordID }
             )
             
-            self?.database.add(deleteOperation)
+            self?.targetDatabase.add(deleteOperation)
         }
     }
     
@@ -300,7 +478,7 @@ class BudgetManager: ObservableObject {
         let predicate = NSPredicate(format: "id == %@", goal.id.uuidString)
         let query = CKQuery(recordType: "SavingsGoal", predicate: predicate)
         
-        database.perform(query, inZoneWith: nil) { [weak self] records, error in
+        performQuery(query) { [weak self] records, error in
             guard let records = records, !records.isEmpty else { return }
             
             let deleteOperation = CKModifyRecordsOperation(
@@ -308,11 +486,11 @@ class BudgetManager: ObservableObject {
                 recordIDsToDelete: records.map { $0.recordID }
             )
             
-            self?.database.add(deleteOperation)
+            self?.targetDatabase.add(deleteOperation)
         }
     }
     
-    // MARK: - CloudKit - Chargement (à ajouter à loadData())
+    // MARK: - CloudKit - Chargement
     
     func loadData() {
         guard isAuthenticated else {
@@ -337,7 +515,7 @@ class BudgetManager: ObservableObject {
         let predicate = NSPredicate(value: true)
         let query = CKQuery(recordType: "RecurringExpense", predicate: predicate)
         
-        database.perform(query, inZoneWith: nil) { [weak self] records, error in
+        performQuery(query) { [weak self] records, error in
             DispatchQueue.main.async {
                 if let error = error {
                     print("❌ Erreur chargement dépenses récurrentes: \(error)")
@@ -356,11 +534,26 @@ class BudgetManager: ObservableObject {
                               let payer = Payer(rawValue: payerString),
                               let frequencyString = record["frequency"] as? String,
                               let frequency = Frequency(rawValue: frequencyString),
-                              let startDate = record["startDate"] as? Date,
-                              let nextDueDate = record["nextDueDate"] as? Date,
-                              let isActive = record["isActive"] as? Bool,
-                              let autoGenerate = record["autoGenerate"] as? Bool else {
+                              let startDate = record["startDate"] as? Date else {
                             return nil
+                        }
+                        
+                        let isActive: Bool
+                        if let isActiveInt = record["isActive"] as? Int64 {
+                            isActive = isActiveInt == 1
+                        } else if let isActiveBool = record["isActive"] as? Bool {
+                            isActive = isActiveBool
+                        } else {
+                            isActive = true
+                        }
+                        
+                        let autoGenerate: Bool
+                        if let autoGenerateInt = record["autoGenerate"] as? Int64 {
+                            autoGenerate = autoGenerateInt == 1
+                        } else if let autoGenerateBool = record["autoGenerate"] as? Bool {
+                            autoGenerate = autoGenerateBool
+                        } else {
+                            autoGenerate = false
                         }
                         
                         let endDate = record["endDate"] as? Date
@@ -390,7 +583,7 @@ class BudgetManager: ObservableObject {
         let predicate = NSPredicate(value: true)
         let query = CKQuery(recordType: "SavingsGoal", predicate: predicate)
         
-        database.perform(query, inZoneWith: nil) { [weak self] records, error in
+        performQuery(query) { [weak self] records, error in
             DispatchQueue.main.async {
                 if let error = error {
                     print("❌ Erreur chargement objectifs épargne: \(error)")
@@ -411,9 +604,17 @@ class BudgetManager: ObservableObject {
                               let category = GoalCategory(rawValue: categoryString),
                               let priorityString = record["priority"] as? String,
                               let priority = GoalPriority(rawValue: priorityString),
-                              let monthlyContribution = record["monthlyContribution"] as? Double,
-                              let isActive = record["isActive"] as? Bool else {
+                              let monthlyContribution = record["monthlyContribution"] as? Double else {
                             return nil
+                        }
+                        
+                        let isActive: Bool
+                        if let isActiveInt = record["isActive"] as? Int64 {
+                            isActive = isActiveInt == 1
+                        } else if let isActiveBool = record["isActive"] as? Bool {
+                            isActive = isActiveBool
+                        } else {
+                            isActive = true
                         }
                         
                         return SavingsGoal(
@@ -442,7 +643,7 @@ class BudgetManager: ObservableObject {
         let predicate = NSPredicate(value: true)
         let query = CKQuery(recordType: "SavingsContribution", predicate: predicate)
         
-        database.perform(query, inZoneWith: nil) { [weak self] records, error in
+        performQuery(query) { [weak self] records, error in
             DispatchQueue.main.async {
                 if let error = error {
                     print("❌ Erreur chargement contributions: \(error)")
@@ -478,7 +679,7 @@ class BudgetManager: ObservableObject {
         }
     }
     
-    // MARK: - Méthodes utilitaires existantes (inchangées)
+    // MARK: - Méthodes utilitaires existantes
     
     func checkAuthentication() {
         print("🔐 Vérification de l'authentification iCloud...")
@@ -531,52 +732,19 @@ class BudgetManager: ObservableObject {
     private func requestPermissions() {
         print("🔑 Demande des permissions CloudKit...")
         
-        container.requestApplicationPermission(.userDiscoverability) { [weak self] status, error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    print("❌ Erreur permissions: \(error)")
-                } else {
-                    print("✅ Permissions accordées")
-                    self?.loadData()
-                }
-            }
-        }
-    }
-    
-    func saveTransaction(_ transaction: Transaction) {
-        guard isAuthenticated else {
-            print("⚠️ Tentative de sauvegarde sans authentification")
-            errorMessage = "Non authentifié - connectez-vous à iCloud"
-            return
-        }
-        
-        print("💾 Sauvegarde de la transaction: \(transaction.description)")
-        
-        if !transactions.contains(where: { $0.id == transaction.id }) {
-            transactions.insert(transaction, at: 0)
-            print("📱 Transaction ajoutée à la liste locale")
-        }
-        
-        let record = CKRecord(recordType: "Transaction")
-        record["id"] = transaction.id.uuidString
-        record["date"] = transaction.date
-        record["description"] = transaction.description
-        record["category"] = transaction.category.rawValue
-        record["amount"] = transaction.amount
-        record["payer"] = transaction.payer.rawValue
-        
-        database.save(record) { [weak self] record, error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    print("❌ Erreur sauvegarde transaction: \(error)")
-                    self?.errorMessage = "Erreur sauvegarde: \(error.localizedDescription)"
-                    self?.transactions.removeAll { $0.id == transaction.id }
-                    
-                    if let ckError = error as? CKError, ckError.code == .notAuthenticated {
-                        self?.checkAuthentication()
+        // Suppression de l'API dépréciée pour iOS 17+
+        if #available(iOS 17.0, *) {
+            print("✅ Permissions modernes - pas besoin de demande explicite")
+            loadData()
+        } else {
+            container.requestApplicationPermission(.userDiscoverability) { [weak self] status, error in
+                DispatchQueue.main.async {
+                    if let error = error {
+                        print("❌ Erreur permissions: \(error)")
+                    } else {
+                        print("✅ Permissions accordées")
+                        self?.loadData()
                     }
-                } else {
-                    print("✅ Transaction sauvegardée avec succès dans CloudKit")
                 }
             }
         }
@@ -594,7 +762,7 @@ class BudgetManager: ObservableObject {
         let predicate = NSPredicate(value: true)
         let query = CKQuery(recordType: "Salaires", predicate: predicate)
         
-        database.perform(query, inZoneWith: nil) { [weak self] records, error in
+        performQuery(query) { [weak self] records, error in
             DispatchQueue.main.async {
                 let record: CKRecord
                 
@@ -602,7 +770,8 @@ class BudgetManager: ObservableObject {
                     record = existingRecord
                     print("📝 Modification de l'enregistrement Salaires existant")
                 } else {
-                    record = CKRecord(recordType: "Salaires")
+                    let recordID = self?.createRecordID(recordName: "Salaires") ?? CKRecord.ID(recordName: "Salaires")
+                    record = CKRecord(recordType: "Salaires", recordID: recordID)
                     print("🆕 Création d'un nouvel enregistrement Salaires")
                 }
                 
@@ -610,7 +779,7 @@ class BudgetManager: ObservableObject {
                 record["doudou"] = self?.salaires.doudou
                 record["lastUpdated"] = Date()
                 
-                self?.database.save(record) { savedRecord, error in
+                self?.targetDatabase.save(record) { savedRecord, error in
                     DispatchQueue.main.async {
                         if let error = error {
                             print("❌ Erreur sauvegarde salaires: \(error)")
@@ -636,7 +805,7 @@ class BudgetManager: ObservableObject {
         let predicate = NSPredicate(value: true)
         let query = CKQuery(recordType: "Budgets", predicate: predicate)
         
-        database.perform(query, inZoneWith: nil) { [weak self] records, error in
+        performQuery(query) { [weak self] records, error in
             DispatchQueue.main.async {
                 let record: CKRecord
                 
@@ -644,7 +813,8 @@ class BudgetManager: ObservableObject {
                     record = existingRecord
                     print("📝 Modification de l'enregistrement Budgets existant")
                 } else {
-                    record = CKRecord(recordType: "Budgets")
+                    let recordID = self?.createRecordID(recordName: "Budgets") ?? CKRecord.ID(recordName: "Budgets")
+                    record = CKRecord(recordType: "Budgets", recordID: recordID)
                     print("🆕 Création d'un nouvel enregistrement Budgets")
                 }
                 
@@ -658,7 +828,7 @@ class BudgetManager: ObservableObject {
                 record["transports"] = self?.budgets.transports
                 record["lastUpdated"] = Date()
                 
-                self?.database.save(record) { savedRecord, error in
+                self?.targetDatabase.save(record) { savedRecord, error in
                     DispatchQueue.main.async {
                         if let error = error {
                             print("❌ Erreur sauvegarde budgets: \(error)")
@@ -685,7 +855,7 @@ class BudgetManager: ObservableObject {
         let predicate = NSPredicate(format: "id == %@", transaction.id.uuidString)
         let query = CKQuery(recordType: "Transaction", predicate: predicate)
         
-        database.perform(query, inZoneWith: nil) { [weak self] records, error in
+        performQuery(query) { [weak self] records, error in
             guard let records = records, !records.isEmpty else {
                 print("⚠️ Aucun enregistrement trouvé pour suppression")
                 return
@@ -693,18 +863,32 @@ class BudgetManager: ObservableObject {
             
             let deleteOperation = CKModifyRecordsOperation(recordsToSave: nil, recordIDsToDelete: records.map { $0.recordID })
             
-            deleteOperation.modifyRecordsCompletionBlock = { _, deletedRecordIDs, error in
-                DispatchQueue.main.async {
-                    if let error = error {
-                        print("❌ Erreur suppression CloudKit: \(error)")
-                        self?.transactions.append(transaction)
-                    } else {
-                        print("✅ Transaction supprimée de CloudKit")
+            if #available(iOS 15.0, *) {
+                deleteOperation.modifyRecordsResultBlock = { result in
+                    DispatchQueue.main.async {
+                        switch result {
+                        case .success(_):
+                            print("✅ Transaction supprimée de CloudKit")
+                        case .failure(let error):
+                            print("❌ Erreur suppression CloudKit: \(error)")
+                            self?.transactions.append(transaction)
+                        }
+                    }
+                }
+            } else {
+                deleteOperation.modifyRecordsCompletionBlock = { _, deletedRecordIDs, error in
+                    DispatchQueue.main.async {
+                        if let error = error {
+                            print("❌ Erreur suppression CloudKit: \(error)")
+                            self?.transactions.append(transaction)
+                        } else {
+                            print("✅ Transaction supprimée de CloudKit")
+                        }
                     }
                 }
             }
             
-            self?.database.add(deleteOperation)
+            self?.targetDatabase.add(deleteOperation)
         }
     }
     
@@ -713,7 +897,7 @@ class BudgetManager: ObservableObject {
         let query = CKQuery(recordType: "Salaires", predicate: predicate)
         query.sortDescriptors = [NSSortDescriptor(key: "lastUpdated", ascending: false)]
         
-        database.perform(query, inZoneWith: nil) { [weak self] records, error in
+        performQuery(query) { [weak self] records, error in
             DispatchQueue.main.async {
                 if let error = error {
                     print("❌ Erreur chargement salaires: \(error)")
@@ -735,7 +919,7 @@ class BudgetManager: ObservableObject {
         let query = CKQuery(recordType: "Budgets", predicate: predicate)
         query.sortDescriptors = [NSSortDescriptor(key: "lastUpdated", ascending: false)]
         
-        database.perform(query, inZoneWith: nil) { [weak self] records, error in
+        performQuery(query) { [weak self] records, error in
             DispatchQueue.main.async {
                 if let error = error {
                     print("❌ Erreur chargement budgets: \(error)")
@@ -762,7 +946,7 @@ class BudgetManager: ObservableObject {
         let query = CKQuery(recordType: "Transaction", predicate: predicate)
         query.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
         
-        database.perform(query, inZoneWith: nil) { [weak self] records, error in
+        performQuery(query) { [weak self] records, error in
             DispatchQueue.main.async {
                 if let error = error {
                     print("❌ Erreur chargement transactions: \(error)")
@@ -827,9 +1011,6 @@ class BudgetManager: ObservableObject {
         return budget > 0 ? min(depenses / budget, 1.0) : 0
     }
     
-    // Correction : Déplacez cette fonction DANS la classe BudgetManager
-
-    // MARK: - Mise à jour des transactions (à ajouter dans BudgetManager)
     func updateTransaction(_ updatedTransaction: Transaction) {
         guard isAuthenticated else {
             print("⚠️ Tentative de mise à jour sans authentification")
@@ -839,23 +1020,20 @@ class BudgetManager: ObservableObject {
         
         print("✏️ Mise à jour de la transaction: \(updatedTransaction.description)")
         
-        // Mettre à jour la liste locale d'abord
         if let index = transactions.firstIndex(where: { $0.id == updatedTransaction.id }) {
             transactions[index] = updatedTransaction
             print("📱 Transaction mise à jour dans la liste locale")
         }
         
-        // Rechercher l'enregistrement existant dans CloudKit
         let predicate = NSPredicate(format: "id == %@", updatedTransaction.id.uuidString)
         let query = CKQuery(recordType: "Transaction", predicate: predicate)
         
-        database.perform(query, inZoneWith: nil) { [weak self] records, error in
+        performQuery(query) { [weak self] records, error in
             DispatchQueue.main.async {
                 if let error = error {
                     print("❌ Erreur recherche transaction pour mise à jour: \(error)")
                     self?.errorMessage = "Erreur recherche transaction: \(error.localizedDescription)"
                     
-                    // Si erreur d'authentification, revérifier
                     if let ckError = error as? CKError, ckError.code == .notAuthenticated {
                         self?.checkAuthentication()
                     }
@@ -868,7 +1046,6 @@ class BudgetManager: ObservableObject {
                     return
                 }
                 
-                // Mettre à jour les champs du record
                 record["date"] = updatedTransaction.date
                 record["description"] = updatedTransaction.description
                 record["category"] = updatedTransaction.category.rawValue
@@ -876,28 +1053,89 @@ class BudgetManager: ObservableObject {
                 record["payer"] = updatedTransaction.payer.rawValue
                 record["lastUpdated"] = Date()
                 
-                // Sauvegarder les modifications dans CloudKit
-                self?.database.save(record) { [weak self] savedRecord, error in
+                self?.targetDatabase.save(record) { [weak self] savedRecord, error in
                     DispatchQueue.main.async {
                         if let error = error {
                             print("❌ Erreur mise à jour CloudKit: \(error)")
                             self?.errorMessage = "Erreur mise à jour: \(error.localizedDescription)"
                             
-                            // Restaurer l'ancienne version en cas d'erreur
                             if let originalIndex = self?.transactions.firstIndex(where: { $0.id == updatedTransaction.id }) {
-                                // Pour restaurer, on devrait garder une copie de l'original,
-                                // mais ici on recharge simplement les données
                                 self?.loadTransactions()
                             }
                             
-                            // Si erreur d'authentification, revérifier
                             if let ckError = error as? CKError, ckError.code == .notAuthenticated {
                                 self?.checkAuthentication()
                             }
                         } else {
                             print("✅ Transaction mise à jour avec succès dans CloudKit")
-                            // Optionnel : afficher un message de succès ou faire une action
                         }
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Partage CloudKit
+    
+    func setupSharingSupport() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(shareAcceptedNotification),
+            name: NSNotification.Name("shareAccepted"),
+            object: nil
+        )
+        checkForExistingShare()
+    }
+    
+    @objc private func shareAcceptedNotification() {
+        print("📨 Partage accepté - Basculement vers base partagée")
+        isUsingSharedDatabase = true
+        sharingStatus = "Partage actif"
+        loadData()
+    }
+    
+    private func checkForExistingShare() {
+        print("🔍 Vérification partage existant...")
+        
+        let query = CKQuery(recordType: "CoupleData", predicate: NSPredicate(value: true))
+        
+        if #available(iOS 15.0, *) {
+            sharedDatabase.fetch(withQuery: query, inZoneWith: nil, desiredKeys: nil, resultsLimit: CKQueryOperation.maximumResults) { result in
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let response):
+                        let records = response.matchResults.compactMap { (_, result) -> CKRecord? in
+                            try? result.get()
+                        }
+                        if !records.isEmpty {
+                            print("✅ Partage existant détecté")
+                            self.isUsingSharedDatabase = true
+                            self.sharingStatus = "Partage actif"
+                            self.loadData()
+                        } else {
+                            print("ℹ️ Pas de partage actif")
+                            self.isUsingSharedDatabase = false
+                            self.sharingStatus = "Pas de partage"
+                        }
+                    case .failure(let error):
+                        print("❌ Erreur vérification partage: \(error)")
+                        self.isUsingSharedDatabase = false
+                        self.sharingStatus = "Erreur de vérification"
+                    }
+                }
+            }
+        } else {
+            sharedDatabase.perform(query, inZoneWith: nil) { [weak self] records, error in
+                DispatchQueue.main.async {
+                    if let records = records, !records.isEmpty {
+                        print("✅ Partage existant détecté")
+                        self?.isUsingSharedDatabase = true
+                        self?.sharingStatus = "Partage actif"
+                        self?.loadData()
+                    } else {
+                        print("ℹ️ Pas de partage actif")
+                        self?.isUsingSharedDatabase = false
+                        self?.sharingStatus = "Pas de partage"
                     }
                 }
             }

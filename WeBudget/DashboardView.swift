@@ -55,29 +55,6 @@ struct FinancialHealthWidget: View {
     @EnvironmentObject var budgetManager: BudgetManager
     @Environment(\.colorScheme) private var colorScheme
     
-    private var healthScore: Double {
-        // Calcul simple de santé financière
-        let positiveBalance = budgetManager.resteDisponible > 0 ? 0.5 : 0.0
-        let budgetRespected = TransactionCategory.allCases.filter {
-            budgetManager.progressionBudget($0) <= 1.0
-        }.count
-        let budgetScore = Double(budgetRespected) / Double(TransactionCategory.allCases.count) * 0.5
-        
-        return min(positiveBalance + budgetScore, 1.0)
-    }
-    
-    private var healthColor: Color {
-        if healthScore >= 0.8 { return Color.limeElectric }
-        else if healthScore >= 0.6 { return Color.peachSunset }
-        else { return Color.softCoral }
-    }
-    
-    private var healthMessage: String {
-        if healthScore >= 0.8 { return "Excellente santé financière ! 🎉" }
-        else if healthScore >= 0.6 { return "Bonne gestion, améliorations possibles" }
-        else { return "Attention requise sur vos finances" }
-    }
-    
     var body: some View {
         VStack(spacing: 16) {
             HStack {
@@ -87,24 +64,24 @@ struct FinancialHealthWidget: View {
                         .fontWeight(.bold)
                         .foregroundColor(Color.adaptiveText(colorScheme))
                     
-                    Text(healthMessage)
+                    Text(budgetManager.santeBudgetaire.message)
                         .font(.appSubheadline)
-                        .foregroundColor(healthColor)
+                        .foregroundColor(budgetManager.santeBudgetaire.color)
                 }
                 
                 Spacer()
                 
-                // Score circulaire rétro
+                // Score circulaire basé sur la santé budgétaire
                 ZStack {
                     Circle()
-                        .stroke(healthColor.opacity(0.2), lineWidth: 8)
+                        .stroke(budgetManager.santeBudgetaire.color.opacity(0.2), lineWidth: 8)
                         .frame(width: 70, height: 70)
                     
                     Circle()
-                        .trim(from: 0, to: healthScore)
+                        .trim(from: 0, to: healthScorePercentage)
                         .stroke(
                             AngularGradient(
-                                colors: [healthColor, healthColor.opacity(0.6)],
+                                colors: [budgetManager.santeBudgetaire.color, budgetManager.santeBudgetaire.color.opacity(0.6)],
                                 center: .center,
                                 startAngle: .degrees(-90),
                                 endAngle: .degrees(270)
@@ -114,37 +91,116 @@ struct FinancialHealthWidget: View {
                         .frame(width: 70, height: 70)
                         .rotationEffect(.degrees(-90))
                     
-                    Text("\(Int(healthScore * 100))%")
-                        .font(.appHeadline)
-                        .fontWeight(.bold)
-                        .foregroundColor(healthColor)
+                    Image(systemName: budgetManager.santeBudgetaire.icon)
+                        .font(.title2)
+                        .foregroundColor(budgetManager.santeBudgetaire.color)
                 }
             }
             
-            // Prochains objectifs
-            if let nextGoal = budgetManager.transactions.isEmpty ? nil : "Ajouter un objectif d'épargne" {
+            // Détail des calculs
+            VStack(spacing: 8) {
                 HStack {
-                    Image(systemName: "target")
-                        .foregroundColor(Color.skyBlueRetro)
-                    
-                    Text("Prochain objectif: \(nextGoal)")
+                    Text("💰 Revenus totaux:")
                         .font(.appCaption)
                         .foregroundColor(.secondary)
                     
                     Spacer()
+                    
+                    Text(budgetManager.totalRevenus.formatted(.currency(code: "EUR")))
+                        .font(.appCaption)
+                        .fontWeight(.medium)
+                }
+                
+                HStack {
+                    Text("📊 Charges communes:")
+                        .font(.appCaption)
+                        .foregroundColor(.secondary)
+                    
+                    Spacer()
+                    
+                    Text(budgetManager.totalBudgets.formatted(.currency(code: "EUR")))
+                        .font(.appCaption)
+                        .fontWeight(.medium)
+                }
+                
+                if budgetManager.totalMonthlyRecurring > 0 {
+                    HStack {
+                        Text("🔄 Dépenses récurrentes:")
+                            .font(.appCaption)
+                            .foregroundColor(.secondary)
+                        
+                        Spacer()
+                        
+                        Text(budgetManager.totalMonthlyRecurring.formatted(.currency(code: "EUR")))
+                            .font(.appCaption)
+                            .fontWeight(.medium)
+                    }
+                }
+                
+                if budgetManager.totalMonthlySavingsGoals > 0 {
+                    HStack {
+                        Text("🎯 Épargne mensuelle:")
+                            .font(.appCaption)
+                            .foregroundColor(.secondary)
+                        
+                        Spacer()
+                        
+                        Text(budgetManager.totalMonthlySavingsGoals.formatted(.currency(code: "EUR")))
+                            .font(.appCaption)
+                            .fontWeight(.medium)
+                    }
+                }
+                
+                Divider()
+                
+                HStack {
+                    Text("💳 Redistribution Pilou:")
+                        .font(.appSubheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.blue)
+                    
+                    Spacer()
+                    
+                    Text(budgetManager.redistributionPilou.formatted(.currency(code: "EUR")))
+                        .font(.currencySmall)
+                        .fontWeight(.bold)
+                        .foregroundColor(.blue)
+                }
+                
+                HStack {
+                    Text("💳 Redistribution Doudou:")
+                        .font(.appSubheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.purple)
+                    
+                    Spacer()
+                    
+                    Text(budgetManager.redistributionDoudou.formatted(.currency(code: "EUR")))
+                        .font(.currencySmall)
+                        .fontWeight(.bold)
+                        .foregroundColor(.purple)
                 }
             }
         }
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color.sunsetGlow.opacity(0.1))
+                .fill(budgetManager.santeBudgetaire.color.opacity(0.1))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.khakiGold.opacity(0.4), lineWidth: 1.5)
+                        .stroke(budgetManager.santeBudgetaire.color.opacity(0.4), lineWidth: 1.5)
                 )
         )
-        .shadow(color: Color.khakiGold.opacity(0.2), radius: 10, x: 0, y: 5)
+        .shadow(color: budgetManager.santeBudgetaire.color.opacity(0.2), radius: 10, x: 0, y: 5)
+    }
+    
+    private var healthScorePercentage: Double {
+        switch budgetManager.santeBudgetaire {
+        case .excellent: return 1.0
+        case .bonne: return 0.8
+        case .attention: return 0.6
+        case .danger: return 0.3
+        }
     }
 }
 
@@ -164,7 +220,7 @@ struct StatsCardsView: View {
             )
             
             RetroStatCard(
-                title: "Dépenses ce mois",
+                title: "Dépenses réelles",
                 value: budgetManager.depensesMoisCourant,
                 icon: "creditcard.fill",
                 gradient: Color.pinkDreams,
@@ -172,17 +228,18 @@ struct StatsCardsView: View {
             )
             
             RetroStatCard(
-                title: "Budget alloué",
+                title: "Charges communes",
                 value: budgetManager.totalBudgets,
-                icon: "chart.pie.fill",
+                icon: "house.fill",
                 gradient: Color.sunsetGlow,
                 accentColor: Color.peachSunset
             )
             
+            // Nouvelle carte pour la redistribution
             RetroStatCard(
-                title: "Reste disponible",
+                title: "À redistribuer",
                 value: budgetManager.resteDisponible,
-                icon: "dollarsign.circle.fill",
+                icon: "arrow.branch",
                 gradient: budgetManager.resteDisponible >= 0 ? Color.limeToSky : Color.pinkDreams,
                 accentColor: budgetManager.resteDisponible >= 0 ? Color.limeElectric : Color.softCoral
             )

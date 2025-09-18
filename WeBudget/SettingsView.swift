@@ -14,162 +14,255 @@ struct SettingsView: View {
     @State private var showingClearAlert = false
     @State private var showingSeuil = false
     @State private var exportData = ""
-    
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         NavigationView {
             Form {
                 // NOUVELLE SECTION: Navigation vers les fonctionnalités
-                Section("Fonctionnalités") {
+                Section {
                     NavigationLink {
                         ConfigurationView()
                             .navigationBarBackButtonHidden(false)
                     } label: {
-                        Label("Configuration budgets", systemImage: "gearshape.fill")
-                            .font(.appCallout) // Space Grotesk Regular
+                        HStack {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.limeElectric.opacity(0.2))
+                                    .frame(width: 32, height: 32)
+                                Image(systemName: "gearshape.fill")
+                                    .foregroundColor(Color.limeElectric)
+                                    .font(.system(size: 16, weight: .semibold))
+                            }
+                            
+                            Text("Configuration budgets")
+                                .font(.appCallout)
+                                .foregroundColor(Color.adaptiveText(colorScheme))
+                        }
                     }
                     
                     NavigationLink {
                         RecurringExpensesView()
                             .navigationBarBackButtonHidden(false)
                     } label: {
-                        Label("Dépenses récurrentes", systemImage: "arrow.clockwise")
-                            .font(.appCallout) // Space Grotesk Regular
-                            .badge(budgetManager.dueRecurringExpenses.count)
+                        HStack {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.skyBlueRetro.opacity(0.2))
+                                    .frame(width: 32, height: 32)
+                                Image(systemName: "arrow.clockwise")
+                                    .foregroundColor(Color.skyBlueRetro)
+                                    .font(.system(size: 16, weight: .semibold))
+                            }
+                            
+                            Text("Dépenses récurrentes")
+                                .font(.appCallout)
+                                .foregroundColor(Color.adaptiveText(colorScheme))
+                            
+                            Spacer()
+                            
+                            if budgetManager.dueRecurringExpenses.count > 0 {
+                                Text("\(budgetManager.dueRecurringExpenses.count)")
+                                    .font(.appCaption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.peachSunset)
+                                    .cornerRadius(12)
+                            }
+                        }
                     }
                     
                     NavigationLink {
                         SavingsGoalsView()
                             .navigationBarBackButtonHidden(false)
                     } label: {
-                        Label("Objectifs d'épargne", systemImage: "target")
-                            .font(.appCallout) // Space Grotesk Regular
-                            .badge(budgetManager.behindScheduleGoals.count)
+                        HStack {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.plumVintage.opacity(0.2))
+                                    .frame(width: 32, height: 32)
+                                Image(systemName: "target")
+                                    .foregroundColor(Color.plumVintage)
+                                    .font(.system(size: 16, weight: .semibold))
+                            }
+                            
+                            Text("Objectifs d'épargne")
+                                .font(.appCallout)
+                                .foregroundColor(Color.adaptiveText(colorScheme))
+                            
+                            Spacer()
+                            
+                            if budgetManager.behindScheduleGoals.count > 0 {
+                                Text("\(budgetManager.behindScheduleGoals.count)")
+                                    .font(.appCaption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.softCoral)
+                                    .cornerRadius(12)
+                            }
+                        }
                     }
+                } header: {
+                    Text("🚀 Fonctionnalités")
+                        .font(.appSubheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(Color.limeElectric)
                 }
                 
-                Section("Sauvegarde des données") {
+                Section {
                     Button {
                         exportDataToJSON()
                     } label: {
-                        Label("Exporter les données", systemImage: "square.and.arrow.up")
-                            .font(.appCallout) // Space Grotesk Regular
+                        HStack {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.turquoiseVintage.opacity(0.2))
+                                    .frame(width: 32, height: 32)
+                                Image(systemName: "square.and.arrow.up")
+                                    .foregroundColor(Color.turquoiseVintage)
+                                    .font(.system(size: 16, weight: .semibold))
+                            }
+                            
+                            Text("Exporter les données")
+                                .font(.appCallout)
+                                .foregroundColor(Color.adaptiveText(colorScheme))
+                        }
                     }
                     
                     Button {
                         showingClearAlert = true
                     } label: {
-                        Label("Effacer toutes les données", systemImage: "trash")
-                            .font(.appCallout) // Space Grotesk Regular
-                            .foregroundColor(.red)
+                        HStack {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.softCoral.opacity(0.2))
+                                    .frame(width: 32, height: 32)
+                                Image(systemName: "trash")
+                                    .foregroundColor(Color.softCoral)
+                                    .font(.system(size: 16, weight: .semibold))
+                            }
+                            
+                            Text("Effacer toutes les données")
+                                .font(.appCallout)
+                                .foregroundColor(Color.softCoral)
+                        }
                     }
+                } header: {
+                    Text("💾 Sauvegarde des données")
+                        .font(.appSubheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(Color.turquoiseVintage)
                 }
                 
-                Section("Personnalisation") {
-                    
+                Section {
                     NavigationLink {
                         NotificationSettingsView()
                     } label: {
-                        Label("Notifications", systemImage: "bell.fill")
-                            .font(.appCallout) // Space Grotesk Regular
+                        HStack {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.pinkBubblegum.opacity(0.2))
+                                    .frame(width: 32, height: 32)
+                                Image(systemName: "bell.fill")
+                                    .foregroundColor(Color.pinkBubblegum)
+                                    .font(.system(size: 16, weight: .semibold))
+                            }
+                            
+                            Text("Notifications")
+                                .font(.appCallout)
+                                .foregroundColor(Color.adaptiveText(colorScheme))
+                        }
                     }
                     
                     NavigationLink {
                         ThemeSettingsView()
                     } label: {
-                        Label("Apparence", systemImage: "paintbrush.fill")
-                            .font(.appCallout) // Space Grotesk Regular
+                        HStack {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.khakiGold.opacity(0.2))
+                                    .frame(width: 32, height: 32)
+                                Image(systemName: "paintbrush.fill")
+                                    .foregroundColor(Color.khakiGold)
+                                    .font(.system(size: 16, weight: .semibold))
+                            }
+                            
+                            Text("Apparence")
+                                .font(.appCallout)
+                                .foregroundColor(Color.adaptiveText(colorScheme))
+                        }
                     }
+                } header: {
+                    Text("🎨 Personnalisation")
+                        .font(.appSubheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(Color.pinkBubblegum)
                 }
-                
-                Section("Informations") {
-                    HStack {
-                        Text("Version")
-                            .font(.appCallout) // Space Grotesk Regular
-                        Spacer()
-                        Text("1.0.0")
-                            .font(.appCallout) // Space Grotesk Regular
-                            .foregroundColor(.secondary)
-                    }
+                                
+                Section {
+                    SettingsInfoRow(title: "Version", value: "1.0.0", color: Color.dimGray)
+                    SettingsInfoRow(title: "Transactions", value: "\(budgetManager.transactions.count)", color: Color.limeElectric)
+                    SettingsInfoRow(title: "Dépenses récurrentes", value: "\(budgetManager.recurringExpenses.count)", color: Color.skyBlueRetro)
+                    SettingsInfoRow(title: "Objectifs d'épargne", value: "\(budgetManager.savingsGoals.count)", color: Color.plumVintage)
                     
                     HStack {
-                        Text("Transactions")
-                            .font(.appCallout) // Space Grotesk Regular
+                        HStack(spacing: 8) {
+                            Circle()
+                                .fill(budgetManager.isAuthenticated ? Color.limeElectric : Color.softCoral)
+                                .frame(width: 8, height: 8)
+                            
+                            Text("CloudKit")
+                                .font(.appCallout)
+                                .foregroundColor(Color.adaptiveText(colorScheme))
+                        }
+                        
                         Spacer()
-                        Text("\(budgetManager.transactions.count)")
-                            .font(.appCallout) // Space Grotesk Regular
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    HStack {
-                        Text("Dépenses récurrentes")
-                            .font(.appCallout) // Space Grotesk Regular
-                        Spacer()
-                        Text("\(budgetManager.recurringExpenses.count)")
-                            .font(.appCallout) // Space Grotesk Regular
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    HStack {
-                        Text("Objectifs d'épargne")
-                            .font(.appCallout) // Space Grotesk Regular
-                        Spacer()
-                        Text("\(budgetManager.savingsGoals.count)")
-                            .font(.appCallout) // Space Grotesk Regular
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    HStack {
-                        Text("CloudKit")
-                            .font(.appCallout) // Space Grotesk Regular
-                        Spacer()
+                        
                         Text(budgetManager.isAuthenticated ? "Connecté" : "Déconnecté")
-                            .font(.appCallout) // Space Grotesk Regular
-                            .foregroundColor(budgetManager.isAuthenticated ? .green : .red)
+                            .font(.appCallout)
+                            .fontWeight(.medium)
+                            .foregroundColor(budgetManager.isAuthenticated ? Color.limeElectric : Color.softCoral)
                     }
+                } header: {
+                    Text("📊 Informations")
+                        .font(.appSubheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(Color.dimGray)
                 }
                 
-                Section("Préférences système") {
-                    HStack {
-                        Text("Mode sombre")
-                            .font(.appCallout) // Space Grotesk Regular
-                        Spacer()
-                        Text("Automatique")
-                            .font(.appCallout) // Space Grotesk Regular
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    HStack {
-                        Text("Notifications")
-                            .font(.appCallout) // Space Grotesk Regular
-                        Spacer()
-                        Text("Activées")
-                            .font(.appCallout) // Space Grotesk Regular
-                            .foregroundColor(.green)
-                    }
-                    
-                    HStack {
-                        Text("Devise")
-                            .font(.appCallout) // Space Grotesk Regular
-                        Spacer()
-                        Text("EUR (€)")
-                            .font(.appCallout) // Space Grotesk Regular
-                            .foregroundColor(.secondary)
-                    }
+                Section {
+                    SettingsInfoRow(title: "Mode sombre", value: "Automatique", color: Color.dimGray)
+                    SettingsInfoRow(title: "Notifications", value: "Activées", color: Color.limeElectric)
+                    SettingsInfoRow(title: "Devise", value: "EUR (€)", color: Color.khakiGold)
+                } header: {
+                    Text("⚙️ Préférences système")
+                        .font(.appSubheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(Color.dimGray)
                 }
             }
-            .navigationTitle("Paramètres")
+            .background(Color.adaptiveBackground(colorScheme))
+            .scrollContentBackground(.hidden)
+            .navigationTitle("⚙️ Paramètres")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbarBackground(Color.sunsetGlow, for: .navigationBar)
             .alert("Effacer toutes les données", isPresented: $showingClearAlert) {
                 Button("Annuler", role: .cancel) {
                     // Action Annuler
                 }
-                .font(.buttonText) // Space Grotesk Medium
+                .font(.buttonText)
+                
                 Button("Effacer", role: .destructive) {
                     clearAllData()
                 }
-                .font(.buttonText) // Space Grotesk Medium
+                .font(.buttonText)
             } message: {
                 Text("Cette action est irréversible. Toutes vos données seront supprimées définitivement.")
-                    .font(.appCallout) // Space Grotesk Regular
+                    .font(.appCallout)
             }
             .sheet(isPresented: $showingExportSheet) {
                 ShareSheet(activityItems: [exportData])
@@ -222,7 +315,30 @@ struct SettingsView: View {
     }
 }
 
-// MARK: - Nouvelles vues de navigation
+// MARK: - Composant réutilisable pour les lignes d'informations
+struct SettingsInfoRow: View {
+    let title: String
+    let value: String
+    let color: Color
+    @Environment(\.colorScheme) private var colorScheme
+    
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.appCallout)
+                .foregroundColor(Color.adaptiveText(colorScheme))
+            
+            Spacer()
+            
+            Text(value)
+                .font(.appCallout)
+                .fontWeight(.medium)
+                .foregroundColor(color)
+        }
+    }
+}
+
+// MARK: - Nouvelles vues de navigation avec style rétro
 
 struct NotificationSettingsView: View {
     @State private var expenseAlerts = true
@@ -230,141 +346,256 @@ struct NotificationSettingsView: View {
     @State private var recurringReminders = true
     @State private var savingsGoalUpdates = true
     @State private var weatherSuggestions = false
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         Form {
-            Section("📱 Types de notifications") {
-                Toggle("🚨 Alertes de dépassement", isOn: $expenseAlerts)
-                    .font(.appCallout) // Space Grotesk Regular
-                Toggle("⚠️ Alertes budget (90%)", isOn: $budgetWarnings)
-                    .font(.appCallout) // Space Grotesk Regular
-                Toggle("🔄 Rappels récurrents", isOn: $recurringReminders)
-                    .font(.appCallout) // Space Grotesk Regular
-                Toggle("🎯 Objectifs d'épargne", isOn: $savingsGoalUpdates)
-                    .font(.appCallout) // Space Grotesk Regular
-                Toggle("🌤️ Suggestions météo", isOn: $weatherSuggestions)
-                    .font(.appCallout) // Space Grotesk Regular
+            Section {
+                RetroToggleRow(
+                    title: "🚨 Alertes de dépassement",
+                    isOn: $expenseAlerts,
+                    color: Color.softCoral
+                )
+                
+                RetroToggleRow(
+                    title: "⚠️ Alertes budget (90%)",
+                    isOn: $budgetWarnings,
+                    color: Color.peachSunset
+                )
+                
+                RetroToggleRow(
+                    title: "🔄 Rappels récurrents",
+                    isOn: $recurringReminders,
+                    color: Color.skyBlueRetro
+                )
+                
+                RetroToggleRow(
+                    title: "🎯 Objectifs d'épargne",
+                    isOn: $savingsGoalUpdates,
+                    color: Color.plumVintage
+                )
+                
+                RetroToggleRow(
+                    title: "🌤️ Suggestions météo",
+                    isOn: $weatherSuggestions,
+                    color: Color.turquoiseVintage
+                )
+            } header: {
+                Text("📱 Types de notifications")
+                    .font(.appSubheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(Color.pinkBubblegum)
             }
             
-            Section("⏰ Fréquence") {
-                HStack {
-                    Text("Rappels récurrents")
-                        .font(.appCallout) // Space Grotesk Regular
-                    Spacer()
-                    Text("2 jours avant")
-                        .font(.appCallout) // Space Grotesk Regular
-                        .foregroundColor(.secondary)
-                }
-                
-                HStack {
-                    Text("Vérification budget")
-                        .font(.appCallout) // Space Grotesk Regular
-                    Spacer()
-                    Text("Quotidienne")
-                        .font(.appCallout) // Space Grotesk Regular
-                        .foregroundColor(.secondary)
-                }
+            Section {
+                SettingsInfoRow(title: "Rappels récurrents", value: "2 jours avant", color: Color.skyBlueRetro)
+                SettingsInfoRow(title: "Vérification budget", value: "Quotidienne", color: Color.limeElectric)
+            } header: {
+                Text("⏰ Fréquence")
+                    .font(.appSubheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(Color.khakiGold)
             }
         }
+        .background(Color.adaptiveBackground(colorScheme))
+        .scrollContentBackground(.hidden)
         .navigationTitle("🔔 Notifications")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(Color.pinkDreams, for: .navigationBar)
+    }
+}
+
+struct RetroToggleRow: View {
+    let title: String
+    @Binding var isOn: Bool
+    let color: Color
+    @Environment(\.colorScheme) private var colorScheme
+    
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.appCallout)
+                .foregroundColor(Color.adaptiveText(colorScheme))
+            
+            Spacer()
+            
+            Toggle("", isOn: $isOn)
+                .toggleStyle(RetroToggleStyle(color: color))
+        }
+    }
+}
+
+struct RetroToggleStyle: ToggleStyle {
+    let color: Color
+    
+    func makeBody(configuration: Configuration) -> some View {
+        HStack {
+            configuration.label
+            
+            RoundedRectangle(cornerRadius: 15)
+                .fill(configuration.isOn ? color : Color.gray.opacity(0.3))
+                .frame(width: 50, height: 30)
+                .overlay(
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 26, height: 26)
+                        .offset(x: configuration.isOn ? 10 : -10)
+                        .animation(.easeInOut(duration: 0.2), value: configuration.isOn)
+                )
+                .onTapGesture {
+                    configuration.isOn.toggle()
+                }
+        }
     }
 }
 
 struct ThemeSettingsView: View {
     @State private var selectedTheme: AppTheme = .system
     @State private var accentColor: Color = .blue
+    @Environment(\.colorScheme) private var colorScheme
+    
+    private let retroColors: [Color] = [
+        Color.limeElectric,
+        Color.pinkBubblegum,
+        Color.skyBlueRetro,
+        Color.peachSunset,
+        Color.plumVintage,
+        Color.turquoiseVintage
+    ]
     
     var body: some View {
         Form {
-            Section("🎨 Thème général") {
+            Section {
                 Picker("Mode d'affichage", selection: $selectedTheme) {
                     Text("🌍 Automatique")
-                        .font(.appCallout) // Space Grotesk Regular
+                        .font(.appCallout)
                         .tag(AppTheme.system)
                     Text("☀️ Clair")
-                        .font(.appCallout) // Space Grotesk Regular
+                        .font(.appCallout)
                         .tag(AppTheme.light)
                     Text("🌙 Sombre")
-                        .font(.appCallout) // Space Grotesk Regular
+                        .font(.appCallout)
                         .tag(AppTheme.dark)
                 }
                 .pickerStyle(SegmentedPickerStyle())
+            } header: {
+                Text("🎨 Thème général")
+                    .font(.appSubheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(Color.khakiGold)
             }
             
-            Section("🌈 Couleur d'accentuation") {
+            Section {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 6), spacing: 15) {
-                    ForEach([Color.blue, Color.green, Color.orange, Color.red, Color.purple, Color.teal], id: \.self) { color in
-                        Circle()
-                            .fill(color)
-                            .frame(width: 30, height: 30)
-                            .overlay(
-                                Circle()
-                                    .stroke(Color.primary, lineWidth: accentColor == color ? 2 : 0)
-                            )
-                            .onTapGesture {
-                                accentColor = color
-                            }
+                    ForEach(retroColors, id: \.self) { color in
+                        Button {
+                            accentColor = color
+                        } label: {
+                            Circle()
+                                .fill(color)
+                                .frame(width: 35, height: 35)
+                                .overlay(
+                                    Circle()
+                                        .stroke(Color.adaptiveText(colorScheme), lineWidth: accentColor == color ? 3 : 0)
+                                )
+                                .overlay(
+                                    Circle()
+                                        .stroke(Color.white, lineWidth: accentColor == color ? 1 : 0)
+                                )
+                                .scaleEffect(accentColor == color ? 1.1 : 1.0)
+                                .animation(.easeInOut(duration: 0.2), value: accentColor == color)
+                        }
                     }
                 }
+                .padding(.vertical, 8)
+            } header: {
+                Text("🌈 Couleur d'accentuation rétro")
+                    .font(.appSubheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(Color.pinkBubblegum)
             }
             
-            Section("📊 Graphiques") {
-                Toggle("🎨 Graphiques colorés", isOn: .constant(true))
-                    .font(.appCallout) // Space Grotesk Regular
-                Toggle("📈 Animations", isOn: .constant(true))
-                    .font(.appCallout) // Space Grotesk Regular
+            Section {
+                RetroToggleRow(
+                    title: "🎨 Graphiques colorés",
+                    isOn: .constant(true),
+                    color: Color.limeElectric
+                )
+                
+                RetroToggleRow(
+                    title: "📈 Animations",
+                    isOn: .constant(true),
+                    color: Color.turquoiseVintage
+                )
+            } header: {
+                Text("📊 Graphiques")
+                    .font(.appSubheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(Color.plumVintage)
             }
         }
+        .background(Color.adaptiveBackground(colorScheme))
+        .scrollContentBackground(.hidden)
         .navigationTitle("🎨 Apparence")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(Color.sunsetGlow, for: .navigationBar)
     }
 }
 
 struct HelpView: View {
+    @Environment(\.colorScheme) private var colorScheme
+    
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 20) {
                 HelpSection(
                     icon: "💰",
                     title: "Gestion des budgets",
-                    content: "Configurez vos revenus et budgets mensuels dans l'onglet Configuration. L'application calcule automatiquement vos proportions et votre reste disponible."
+                    content: "Configurez vos revenus et budgets mensuels dans l'onglet Configuration. L'application calcule automatiquement vos proportions et votre reste disponible.",
+                    color: Color.limeElectric
                 )
                 
                 HelpSection(
                     icon: "💳",
                     title: "Ajout de transactions",
-                    content: "Appuyez sur + dans l'onglet Dépenses pour ajouter une nouvelle transaction. Sélectionnez la catégorie, le montant et qui a payé."
+                    content: "Appuyez sur + dans l'onglet Dépenses pour ajouter une nouvelle transaction. Sélectionnez la catégorie, le montant et qui a payé.",
+                    color: Color.skyBlueRetro
                 )
                 
                 HelpSection(
                     icon: "🔄",
                     title: "Dépenses récurrentes",
-                    content: "Créez des dépenses qui se répètent automatiquement (loyer, abonnements, etc.). L'application vous rappellera quand elles sont dues."
+                    content: "Créez des dépenses qui se répètent automatiquement (loyer, abonnements, etc.). L'application vous rappellera quand elles sont dues.",
+                    color: Color.peachSunset
                 )
                 
                 HelpSection(
                     icon: "🎯",
                     title: "Objectifs d'épargne",
-                    content: "Fixez-vous des objectifs d'épargne avec des dates limites. Suivez votre progression et recevez des encouragements."
+                    content: "Fixez-vous des objectifs d'épargne avec des dates limites. Suivez votre progression et recevez des encouragements.",
+                    color: Color.plumVintage
                 )
                 
                 HelpSection(
                     icon: "🌤️",
                     title: "Suggestions météo",
-                    content: "L'application analyse la météo pour vous suggérer des économies (cuisiner par temps de pluie, activités gratuites au soleil, etc.)."
+                    content: "L'application analyse la météo pour vous suggérer des économies (cuisiner par temps de pluie, activités gratuites au soleil, etc.).",
+                    color: Color.turquoiseVintage
                 )
                 
                 HelpSection(
                     icon: "☁️",
                     title: "Synchronisation",
-                    content: "Vos données sont automatiquement synchronisées via iCloud entre tous vos appareils Apple connectés au même compte."
+                    content: "Vos données sont automatiquement synchronisées via iCloud entre tous vos appareils Apple connectés au même compte.",
+                    color: Color.pinkBubblegum
                 )
             }
             .padding()
         }
+        .background(Color.adaptiveBackground(colorScheme))
         .navigationTitle("📖 Guide")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(Color.oceanBreeze, for: .navigationBar)
     }
 }
 
@@ -372,122 +603,175 @@ struct HelpSection: View {
     let icon: String
     let title: String
     let content: String
+    let color: Color
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(icon)
-                    .font(.title2)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(color.opacity(0.2))
+                        .frame(width: 44, height: 44)
+                    
+                    Text(icon)
+                        .font(.title2)
+                }
+                
                 Text(title)
-                    .font(.appHeadline) // Space Grotesk SemiBold
+                    .font(.appHeadline)
                     .fontWeight(.semibold)
+                    .foregroundColor(Color.adaptiveText(colorScheme))
             }
             
             Text(content)
-                .font(.appSubheadline) // Space Grotesk Medium
+                .font(.appSubheadline)
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+                .lineSpacing(2)
         }
-        .padding()
-        .background(Color.gray.opacity(0.1))
-        .cornerRadius(12)
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.adaptiveSurface(colorScheme))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(color.opacity(0.3), lineWidth: 1)
+                )
+        )
+        .shadow(color: color.opacity(0.1), radius: 8, x: 0, y: 4)
     }
 }
 
 struct AboutView: View {
+    @Environment(\.colorScheme) private var colorScheme
+    
     var body: some View {
         ScrollView {
             VStack(spacing: 30) {
-                // Logo et nom de l'app
-                VStack(spacing: 10) {
-                    Image(systemName: "wallet.pass.fill")
-                        .font(.system(size: 60))
-                        .foregroundColor(.blue)
+                // Logo et nom de l'app avec style rétro
+                VStack(spacing: 15) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.limeToSky)
+                            .frame(width: 100, height: 100)
+                            .shadow(color: Color.limeElectric.opacity(0.3), radius: 10, x: 0, y: 5)
+                        
+                        Image(systemName: "wallet.pass.fill")
+                            .font(.system(size: 40))
+                            .foregroundColor(Color.brownDeep)
+                    }
                     
                     Text("WeBudget")
-                        .font(.appTitle) // Space Grotesk SemiBold
+                        .font(.appTitle)
                         .fontWeight(.bold)
+                        .foregroundColor(Color.adaptiveText(colorScheme))
                     
                     Text("Version 1.0.0")
-                        .font(.appSubheadline) // Space Grotesk Medium
+                        .font(.appSubheadline)
                         .foregroundColor(.secondary)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 6)
+                        .background(Color.khakiGold.opacity(0.2))
+                        .cornerRadius(12)
                 }
                 
-                // Description
+                // Description avec carte rétro
                 VStack(alignment: .leading, spacing: 15) {
                     Text("À propos")
-                        .font(.appHeadline) // Space Grotesk SemiBold
+                        .font(.appHeadline)
                         .fontWeight(.bold)
+                        .foregroundColor(Color.adaptiveText(colorScheme))
                     
                     Text("WeBudget est une application de gestion budgétaire conçue spécialement pour les couples. Elle vous aide à gérer vos finances communes tout en respectant vos contributions proportionnelles.")
-                        .font(.appSubheadline) // Space Grotesk Medium
+                        .font(.appSubheadline)
                         .foregroundColor(.secondary)
+                        .lineSpacing(2)
                 }
+                .retroCardStyle()
                 
-                // Fonctionnalités
+                // Fonctionnalités avec style coloré
                 VStack(alignment: .leading, spacing: 15) {
                     Text("Fonctionnalités principales")
-                        .font(.appHeadline) // Space Grotesk SemiBold
+                        .font(.appHeadline)
                         .fontWeight(.bold)
+                        .foregroundColor(Color.adaptiveText(colorScheme))
                     
-                    VStack(alignment: .leading, spacing: 8) {
-                        FeatureRow(icon: "💰", text: "Gestion proportionnelle des revenus")
-                        FeatureRow(icon: "📊", text: "Suivi des budgets par catégorie")
-                        FeatureRow(icon: "🔄", text: "Dépenses récurrentes automatiques")
-                        FeatureRow(icon: "🎯", text: "Objectifs d'épargne personnalisés")
-                        FeatureRow(icon: "🌤️", text: "Suggestions basées sur la météo")
-                        FeatureRow(icon: "☁️", text: "Synchronisation iCloud")
+                    LazyVStack(alignment: .leading, spacing: 12) {
+                        FeatureRow(icon: "💰", text: "Gestion proportionnelle des revenus", color: Color.limeElectric)
+                        FeatureRow(icon: "📊", text: "Suivi des budgets par catégorie", color: Color.skyBlueRetro)
+                        FeatureRow(icon: "🔄", text: "Dépenses récurrentes automatiques", color: Color.peachSunset)
+                        FeatureRow(icon: "🎯", text: "Objectifs d'épargne personnalisés", color: Color.plumVintage)
+                        FeatureRow(icon: "🌤️", text: "Suggestions basées sur la météo", color: Color.turquoiseVintage)
+                        FeatureRow(icon: "☁️", text: "Synchronisation iCloud", color: Color.pinkBubblegum)
                     }
                 }
+                .retroCardStyle()
                 
                 // Crédits
                 VStack(alignment: .leading, spacing: 15) {
                     Text("Crédits")
-                        .font(.appHeadline) // Space Grotesk SemiBold
+                        .font(.appHeadline)
                         .fontWeight(.bold)
+                        .foregroundColor(Color.adaptiveText(colorScheme))
                     
                     Text("Développé avec ❤️ par Pierre-Louis L'ALLORET")
-                        .font(.appSubheadline) // Space Grotesk Medium
+                        .font(.appSubheadline)
                         .foregroundColor(.secondary)
                     
                     Text("Utilise WeatherKit d'Apple pour les données météorologiques")
-                        .font(.appCaption) // Space Grotesk Regular
+                        .font(.appCaption)
                         .foregroundColor(.secondary)
                 }
+                .retroCardStyle()
                 
-                // Contact
-                VStack(spacing: 10) {
+                // Contact avec boutons rétro
+                VStack(spacing: 15) {
                     Button("📧 Contact") {
                         if let url = URL(string: "mailto:contact@webudget.app") {
                             UIApplication.shared.open(url)
                         }
                     }
-                    .font(.buttonText) // Space Grotesk Medium
-                    .buttonStyle(.borderedProminent)
+                    .font(.buttonText)
+                    .retroButtonStyle()
                     
                     Button("⭐ Noter l'app") {
                         // Action pour noter l'app
                     }
-                    .font(.buttonText) // Space Grotesk Medium
-                    .buttonStyle(.bordered)
+                    .font(.buttonText)
+                    .retroSecondaryButtonStyle()
                 }
             }
-            .padding()
+            .padding(20)
         }
+        .background(Color.adaptiveBackground(colorScheme))
         .navigationTitle("À propos")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(Color.limeToSky, for: .navigationBar)
     }
 }
 
 struct FeatureRow: View {
     let icon: String
     let text: String
+    let color: Color
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
-        HStack {
-            Text(icon)
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(color.opacity(0.2))
+                    .frame(width: 32, height: 32)
+                
+                Text(icon)
+                    .font(.system(size: 16))
+            }
+            
             Text(text)
-                .font(.appSubheadline) // Space Grotesk Medium
+                .font(.appSubheadline)
+                .foregroundColor(Color.adaptiveText(colorScheme))
+            
             Spacer()
         }
     }

@@ -12,9 +12,9 @@ extension Color {
     
     // MARK: - Couleurs Principales Rétro
     
-    /// Couleur d'accent principale - Vert lime électrique
+    /// Couleur d'accent principale - Vert lime électrique (version lisible)
     /// Usage: Boutons principaux, call-to-action, succès, éléments positifs
-    static let limeElectric = Color(hex: "#D8FE67")
+    static let limeElectric = Color(hex: "#A8E026")
     
     /// Couleur secondaire - Rose bubblegum
     /// Usage: Éléments ludiques, notifications, highlights féminins
@@ -32,7 +32,11 @@ extension Color {
     /// Usage: Texte sur fond clair, éléments de contraste
     static let richBrown = Color(hex: "#9C4A0C")
     
-    // MARK: - Couleurs Complémentaires Rétro
+    // MARK: - Couleurs Complémentaires Rétro (version améliorée)
+    
+    /// Vert lime alternatif plus doux
+    /// Usage: Éléments secondaires verts, fonds subtils
+    static let limeSoft = Color(hex: "#D8FE67")
     
     /// Bleu ciel rétro
     /// Usage: Informations, liens, éléments informatifs et apaisants
@@ -100,10 +104,18 @@ extension Color {
     
     // MARK: - Gradients Rétro Signature
     
-    /// Gradient principal - Lime vers Ciel
+    /// Gradient principal - Lime vers Ciel (version améliorée)
     /// Usage: Boutons principaux, headers importants, éléments de navigation
     static let limeToSky = LinearGradient(
-        colors: [.limeElectric, .skyBlueRetro],
+        colors: [Color(hex: "#A8E026"), Color(hex: "#6BB8E8")],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+    
+    /// Gradient lime doux - pour les fonds
+    /// Usage: Fonds subtils, éléments délicats
+    static let limeSoftGradient = LinearGradient(
+        colors: [Color(hex: "#D8FE67"), Color(hex: "#B8F567")],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
@@ -142,8 +154,11 @@ extension Color {
     
     // MARK: - Couleurs Fonctionnelles WeBudget
     
-    /// Succès financier - Vert lime avec transparence
-    static let budgetSuccess = Color.limeElectric.opacity(0.8)
+    /// Succès financier - Vert lime avec meilleur contraste
+    static let budgetSuccess = Color(hex: "#7DB928")
+    
+    /// Succès financier fond - Version plus douce pour les fonds
+    static let budgetSuccessBackground = Color(hex: "#D8FE67").opacity(0.3)
     
     /// Attention budget - Orange pêche
     static let budgetWarning = Color.peachSunset
@@ -256,7 +271,7 @@ extension View {
                     .stroke(Color.limeElectric.opacity(0.3), lineWidth: 1)
             )
             .cornerRadius(12)
-            .shadow(color: .limeElectric.opacity(0.1), radius: 8, x: 0, y: 4)
+            .shadow(color: Color.limeElectric.opacity(0.1), radius: 8, x: 0, y: 4)
     }
     
     /// Applique le style de bouton principal rétro
@@ -265,10 +280,10 @@ extension View {
             .padding(.horizontal, 24)
             .padding(.vertical, 12)
             .background(Color.limeToSky)
-            .foregroundColor(.brownDeep)
+            .foregroundColor(Color.brownDeep)
             .fontWeight(.semibold)
             .cornerRadius(25)
-            .shadow(color: .limeElectric.opacity(0.3), radius: 4, x: 0, y: 2)
+            .shadow(color: Color.limeElectric.opacity(0.3), radius: 4, x: 0, y: 2)
     }
     
     /// Applique le style de bouton secondaire rétro
@@ -277,10 +292,10 @@ extension View {
             .padding(.horizontal, 20)
             .padding(.vertical, 10)
             .background(Color.pinkDreams)
-            .foregroundColor(.brownDeep)
+            .foregroundColor(Color.brownDeep)
             .fontWeight(.medium)
             .cornerRadius(20)
-            .shadow(color: .pinkBubblegum.opacity(0.2), radius: 3, x: 0, y: 1)
+            .shadow(color: Color.pinkBubblegum.opacity(0.2), radius: 3, x: 0, y: 1)
     }
     
     /// Applique le style d'alerte rétro
@@ -306,19 +321,19 @@ enum RetroAlertType {
     
     var backgroundColor: Color {
         switch self {
-        case .success: return .limeElectric.opacity(0.1)
-        case .warning: return .peachSunset.opacity(0.1)
-        case .danger: return .softCoral.opacity(0.1)
-        case .info: return .skyBlueRetro.opacity(0.1)
+        case .success: return Color.limeElectric.opacity(0.1)
+        case .warning: return Color.peachSunset.opacity(0.1)
+        case .danger: return Color.softCoral.opacity(0.1)
+        case .info: return Color.skyBlueRetro.opacity(0.1)
         }
     }
     
     var accentColor: Color {
         switch self {
-        case .success: return .limeElectric
-        case .warning: return .peachSunset
-        case .danger: return .softCoral
-        case .info: return .skyBlueRetro
+        case .success: return Color.limeElectric
+        case .warning: return Color.peachSunset
+        case .danger: return Color.softCoral
+        case .info: return Color.skyBlueRetro
         }
     }
 }
@@ -329,16 +344,16 @@ extension Color {
     
     /// Couleur de fond adaptative selon le mode d'affichage
     static func adaptiveBackground(_ colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark ? .midnightBlue : .creamPaper
+        colorScheme == .dark ? Color.midnightBlue : Color.creamPaper
     }
     
     /// Couleur de texte adaptative selon le mode d'affichage
     static func adaptiveText(_ colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark ? .creamPaper : .brownDeep
+        colorScheme == .dark ? Color.creamPaper : Color.brownDeep
     }
     
     /// Couleur de surface adaptative (cartes, etc.)
     static func adaptiveSurface(_ colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark ? .coffeeBean : .warmWhite
+        colorScheme == .dark ? Color.coffeeBean : Color.warmWhite
     }
 }
