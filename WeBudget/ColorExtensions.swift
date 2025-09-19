@@ -279,7 +279,6 @@ extension View {
         self
             .padding(.horizontal, 24)
             .padding(.vertical, 12)
-            .background(Color.limeToSky)
             .foregroundColor(Color.brownDeep)
             .fontWeight(.semibold)
             .cornerRadius(25)
@@ -291,7 +290,6 @@ extension View {
         self
             .padding(.horizontal, 20)
             .padding(.vertical, 10)
-            .background(Color.pinkDreams)
             .foregroundColor(Color.brownDeep)
             .fontWeight(.medium)
             .cornerRadius(20)

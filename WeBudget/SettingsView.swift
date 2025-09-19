@@ -107,7 +107,7 @@ struct SettingsView: View {
                         }
                     }
                 } header: {
-                    Text("🚀 Fonctionnalités")
+                    Text("Fonctionnalités")
                         .font(.appSubheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(Color.limeElectric)
@@ -152,56 +152,12 @@ struct SettingsView: View {
                         }
                     }
                 } header: {
-                    Text("💾 Sauvegarde des données")
+                    Text("Sauvegarde des données")
                         .font(.appSubheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(Color.turquoiseVintage)
                 }
                 
-                Section {
-                    NavigationLink {
-                        NotificationSettingsView()
-                    } label: {
-                        HStack {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color.pinkBubblegum.opacity(0.2))
-                                    .frame(width: 32, height: 32)
-                                Image(systemName: "bell.fill")
-                                    .foregroundColor(Color.pinkBubblegum)
-                                    .font(.system(size: 16, weight: .semibold))
-                            }
-                            
-                            Text("Notifications")
-                                .font(.appCallout)
-                                .foregroundColor(Color.adaptiveText(colorScheme))
-                        }
-                    }
-                    
-                    NavigationLink {
-                        ThemeSettingsView()
-                    } label: {
-                        HStack {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color.khakiGold.opacity(0.2))
-                                    .frame(width: 32, height: 32)
-                                Image(systemName: "paintbrush.fill")
-                                    .foregroundColor(Color.khakiGold)
-                                    .font(.system(size: 16, weight: .semibold))
-                            }
-                            
-                            Text("Apparence")
-                                .font(.appCallout)
-                                .foregroundColor(Color.adaptiveText(colorScheme))
-                        }
-                    }
-                } header: {
-                    Text("🎨 Personnalisation")
-                        .font(.appSubheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(Color.pinkBubblegum)
-                }
                                 
                 Section {
                     SettingsInfoRow(title: "Version", value: "1.0.0", color: Color.dimGray)
@@ -228,7 +184,7 @@ struct SettingsView: View {
                             .foregroundColor(budgetManager.isAuthenticated ? Color.limeElectric : Color.softCoral)
                     }
                 } header: {
-                    Text("📊 Informations")
+                    Text("Informations")
                         .font(.appSubheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(Color.dimGray)
@@ -239,7 +195,7 @@ struct SettingsView: View {
                     SettingsInfoRow(title: "Notifications", value: "Activées", color: Color.limeElectric)
                     SettingsInfoRow(title: "Devise", value: "EUR (€)", color: Color.khakiGold)
                 } header: {
-                    Text("⚙️ Préférences système")
+                    Text("Préférences système")
                         .font(.appSubheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(Color.dimGray)
@@ -247,14 +203,10 @@ struct SettingsView: View {
             }
             .background(Color.adaptiveBackground(colorScheme))
             .scrollContentBackground(.hidden)
-            .navigationTitle("⚙️ Paramètres")
+            .navigationTitle("Paramètres")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(Color.sunsetGlow, for: .navigationBar)
             .alert("Effacer toutes les données", isPresented: $showingClearAlert) {
-                Button("Annuler", role: .cancel) {
-                    // Action Annuler
-                }
-                .font(.buttonText)
                 
                 Button("Effacer", role: .destructive) {
                     clearAllData()
@@ -338,73 +290,6 @@ struct SettingsInfoRow: View {
     }
 }
 
-// MARK: - Nouvelles vues de navigation avec style rétro
-
-struct NotificationSettingsView: View {
-    @State private var expenseAlerts = true
-    @State private var budgetWarnings = true
-    @State private var recurringReminders = true
-    @State private var savingsGoalUpdates = true
-    @State private var weatherSuggestions = false
-    @Environment(\.colorScheme) private var colorScheme
-    
-    var body: some View {
-        Form {
-            Section {
-                RetroToggleRow(
-                    title: "🚨 Alertes de dépassement",
-                    isOn: $expenseAlerts,
-                    color: Color.softCoral
-                )
-                
-                RetroToggleRow(
-                    title: "⚠️ Alertes budget (90%)",
-                    isOn: $budgetWarnings,
-                    color: Color.peachSunset
-                )
-                
-                RetroToggleRow(
-                    title: "🔄 Rappels récurrents",
-                    isOn: $recurringReminders,
-                    color: Color.skyBlueRetro
-                )
-                
-                RetroToggleRow(
-                    title: "🎯 Objectifs d'épargne",
-                    isOn: $savingsGoalUpdates,
-                    color: Color.plumVintage
-                )
-                
-                RetroToggleRow(
-                    title: "🌤️ Suggestions météo",
-                    isOn: $weatherSuggestions,
-                    color: Color.turquoiseVintage
-                )
-            } header: {
-                Text("📱 Types de notifications")
-                    .font(.appSubheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(Color.pinkBubblegum)
-            }
-            
-            Section {
-                SettingsInfoRow(title: "Rappels récurrents", value: "2 jours avant", color: Color.skyBlueRetro)
-                SettingsInfoRow(title: "Vérification budget", value: "Quotidienne", color: Color.limeElectric)
-            } header: {
-                Text("⏰ Fréquence")
-                    .font(.appSubheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(Color.khakiGold)
-            }
-        }
-        .background(Color.adaptiveBackground(colorScheme))
-        .scrollContentBackground(.hidden)
-        .navigationTitle("🔔 Notifications")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Color.pinkDreams, for: .navigationBar)
-    }
-}
-
 struct RetroToggleRow: View {
     let title: String
     @Binding var isOn: Bool
@@ -446,99 +331,6 @@ struct RetroToggleStyle: ToggleStyle {
                     configuration.isOn.toggle()
                 }
         }
-    }
-}
-
-struct ThemeSettingsView: View {
-    @State private var selectedTheme: AppTheme = .system
-    @State private var accentColor: Color = .blue
-    @Environment(\.colorScheme) private var colorScheme
-    
-    private let retroColors: [Color] = [
-        Color.limeElectric,
-        Color.pinkBubblegum,
-        Color.skyBlueRetro,
-        Color.peachSunset,
-        Color.plumVintage,
-        Color.turquoiseVintage
-    ]
-    
-    var body: some View {
-        Form {
-            Section {
-                Picker("Mode d'affichage", selection: $selectedTheme) {
-                    Text("🌍 Automatique")
-                        .font(.appCallout)
-                        .tag(AppTheme.system)
-                    Text("☀️ Clair")
-                        .font(.appCallout)
-                        .tag(AppTheme.light)
-                    Text("🌙 Sombre")
-                        .font(.appCallout)
-                        .tag(AppTheme.dark)
-                }
-                .pickerStyle(SegmentedPickerStyle())
-            } header: {
-                Text("🎨 Thème général")
-                    .font(.appSubheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(Color.khakiGold)
-            }
-            
-            Section {
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 6), spacing: 15) {
-                    ForEach(retroColors, id: \.self) { color in
-                        Button {
-                            accentColor = color
-                        } label: {
-                            Circle()
-                                .fill(color)
-                                .frame(width: 35, height: 35)
-                                .overlay(
-                                    Circle()
-                                        .stroke(Color.adaptiveText(colorScheme), lineWidth: accentColor == color ? 3 : 0)
-                                )
-                                .overlay(
-                                    Circle()
-                                        .stroke(Color.white, lineWidth: accentColor == color ? 1 : 0)
-                                )
-                                .scaleEffect(accentColor == color ? 1.1 : 1.0)
-                                .animation(.easeInOut(duration: 0.2), value: accentColor == color)
-                        }
-                    }
-                }
-                .padding(.vertical, 8)
-            } header: {
-                Text("🌈 Couleur d'accentuation rétro")
-                    .font(.appSubheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(Color.pinkBubblegum)
-            }
-            
-            Section {
-                RetroToggleRow(
-                    title: "🎨 Graphiques colorés",
-                    isOn: .constant(true),
-                    color: Color.limeElectric
-                )
-                
-                RetroToggleRow(
-                    title: "📈 Animations",
-                    isOn: .constant(true),
-                    color: Color.turquoiseVintage
-                )
-            } header: {
-                Text("📊 Graphiques")
-                    .font(.appSubheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(Color.plumVintage)
-            }
-        }
-        .background(Color.adaptiveBackground(colorScheme))
-        .scrollContentBackground(.hidden)
-        .navigationTitle("🎨 Apparence")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Color.sunsetGlow, for: .navigationBar)
     }
 }
 
@@ -724,23 +516,6 @@ struct AboutView: View {
                         .foregroundColor(.secondary)
                 }
                 .retroCardStyle()
-                
-                // Contact avec boutons rétro
-                VStack(spacing: 15) {
-                    Button("📧 Contact") {
-                        if let url = URL(string: "mailto:contact@webudget.app") {
-                            UIApplication.shared.open(url)
-                        }
-                    }
-                    .font(.buttonText)
-                    .retroButtonStyle()
-                    
-                    Button("⭐ Noter l'app") {
-                        // Action pour noter l'app
-                    }
-                    .font(.buttonText)
-                    .retroSecondaryButtonStyle()
-                }
             }
             .padding(20)
         }

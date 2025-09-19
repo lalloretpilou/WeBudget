@@ -54,7 +54,7 @@ struct ConfigurationView: View {
                         )
                     }
                 } header: {
-                    Text("📊 Budgets mensuels")
+                    Text("Budgets mensuels")
                         .font(.appSubheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(Color.limeElectric)
@@ -63,7 +63,7 @@ struct ConfigurationView: View {
                 Section {
                     RedistributionView(salaires: tempSalaires, budgets: tempBudgets)
                 } header: {
-                    Text("💳 Redistribution mensuelle")
+                    Text("Redistribution mensuelle")
                         .font(.appSubheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(Color.turquoiseVintage)
@@ -71,12 +71,11 @@ struct ConfigurationView: View {
             }
             .background(Color.adaptiveBackground(colorScheme))
             .scrollContentBackground(.hidden)
-            .navigationTitle("⚙️ Configuration")
+            .navigationTitle("Configuration")
             .navigationBarTitleDisplayMode(.large)
-            .toolbarBackground(Color.earthTone, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("💾 Sauvegarder") {
+                    Button("Sauvegarder") {
                         saveConfiguration()
                     }
                     .font(.buttonText)
@@ -348,7 +347,7 @@ struct RedistributionView: View {
         VStack(alignment: .leading, spacing: 16) {
             // En-tête avec indicateur de santé
             HStack {
-                Text("💳 Comptes personnels")
+                Text("Comptes personnels")
                     .font(.appSubheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(Color.adaptiveText(colorScheme))

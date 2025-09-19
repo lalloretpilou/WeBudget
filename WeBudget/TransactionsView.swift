@@ -35,7 +35,7 @@ struct TransactionsView: View {
     var body: some View {
         NavigationView {
             VStack {
-                // Filtres avec style rétro
+                // Filtres avec fond transparent
                 FilterView(selectedCategory: $selectedCategory)
                 
                 // Liste des transactions
@@ -45,7 +45,8 @@ struct TransactionsView: View {
                     List {
                         ForEach(filteredTransactions) { transaction in
                             TransactionDetailRowView(transaction: transaction)
-                                .listRowBackground(Color.adaptiveSurface(colorScheme))
+                                .listRowBackground(Color.clear) // Fond transparent pour la cellule de liste
+                                .listRowSeparator(.hidden) // Masquer les séparateurs
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                     Button("Supprimer", role: .destructive) {
                                         budgetManager.deleteTransaction(transaction)
@@ -64,15 +65,14 @@ struct TransactionsView: View {
                         }
                     }
                     .listStyle(PlainListStyle())
-                    .scrollContentBackground(.hidden)
-                    .background(Color.adaptiveBackground(colorScheme))
+                    .scrollContentBackground(.hidden) // Masquer le fond par défaut de la liste
                     .searchable(text: $searchText, prompt: "Rechercher une transaction...")
                 }
             }
             .background(Color.adaptiveBackground(colorScheme))
-            .navigationTitle("💳 Dépenses")
+            .navigationTitle("Dépenses")
             .navigationBarTitleDisplayMode(.large)
-            .toolbarBackground(Color.limeToSky.opacity(0.8), for: .navigationBar)
+            .toolbarBackground(.hidden, for: .navigationBar) // Masquer le fond de la barre de navigation
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
@@ -132,10 +132,7 @@ struct FilterView: View {
             .padding(.horizontal, 20)
         }
         .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 0)
-                .fill(Color.adaptiveSurface(colorScheme).opacity(0.8))
-        )
+        // Suppression du fond blanc/surface - seuls les chips ont un fond
     }
     
     private func categoryColor(for category: TransactionCategory) -> Color {
@@ -293,6 +290,8 @@ struct TransactionDetailRowView: View {
                 )
         )
         .shadow(color: categoryColor.opacity(0.1), radius: 6, x: 0, y: 3)
+        .padding(.horizontal, 16) // Espacement par rapport aux bords
+        .padding(.vertical, 6) // Espacement vertical entre les transactions
     }
     
     private var relativeDate: String {
@@ -350,23 +349,6 @@ struct EmptyTransactionsView: View {
                     .lineSpacing(4)
             }
             
-            // Bouton d'encouragement avec style rétro
-            VStack(spacing: 8) {
-                HStack(spacing: 8) {
-                    Image(systemName: "sparkles")
-                        .foregroundColor(Color.peachSunset)
-                    Text("Commencez à suivre vos dépenses")
-                        .font(.appFootnote)
-                        .fontWeight(.medium)
-                        .foregroundColor(Color.peachSunset)
-                    Image(systemName: "sparkles")
-                        .foregroundColor(Color.peachSunset)
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(Color.peachSunset.opacity(0.1))
-                .cornerRadius(12)
-            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(40)

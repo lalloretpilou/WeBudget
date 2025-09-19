@@ -11,8 +11,8 @@ struct DashboardView: View {
             ScrollView {
                 LazyVStack(spacing: 25) {
                     // Widget météo en haut avec style rétro
-                    WeatherWidget()
-                        .environmentObject(weatherManager)
+//                    WeatherWidget()
+//                        .environmentObject(weatherManager)
                     
                     // NOUVEAU: Widget de santé financière
                     FinancialHealthWidget()
@@ -41,7 +41,6 @@ struct DashboardView: View {
             }
             .background(Color.adaptiveBackground(colorScheme))
             .navigationTitle("Tableau de bord")
-            .toolbarBackground(Color.limeToSky, for: .navigationBar)
             .refreshable {
                 budgetManager.loadData()
                 weatherManager.loadWeather()

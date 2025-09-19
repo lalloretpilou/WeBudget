@@ -29,71 +29,62 @@ struct RecurringExpensesView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
-                // Résumé en haut avec style rétro
-                RecurringSummaryCard()
-                
-                // Filtres avec style rétro
-                FrequencyFilterView(selectedFrequency: $selectedFrequency)
-                
-                // Liste des dépenses
-                if filteredExpenses.isEmpty {
-                    EmptyRecurringExpensesView()
-                } else {
-                    List {
-                        ForEach(groupedExpenses, id: \.0) { frequencyName, expenses in
-                            Section {
-                                ForEach(expenses) { expense in
-                                    RecurringExpenseRowView(expense: expense)
-                                        .listRowBackground(Color.adaptiveSurface(colorScheme))
-                                        .swipeActions(edge: .trailing) {
-                                            Button("Supprimer", role: .destructive) {
-                                                budgetManager.deleteRecurringExpense(expense)
-                                            }
-                                            .tint(Color.softCoral)
-                                            
-                                            if expense.isDue {
-                                                Button("Traiter") {
-                                                    budgetManager.processRecurringExpense(expense)
-                                                }
-                                                .tint(Color.limeElectric)
-                                            }
+            ScrollView {
+                VStack(spacing: 20) {
+                    // Résumé en haut avec style rétro
+                    RecurringSummaryCard()
+                    
+                    // Filtres avec style rétro
+                    FrequencyFilterView(selectedFrequency: $selectedFrequency)
+                    
+                    // Liste des dépenses
+                    if filteredExpenses.isEmpty {
+                        EmptyRecurringExpensesView()
+                    } else {
+                        LazyVStack(spacing: 16) {
+                            ForEach(groupedExpenses, id: \.0) { frequencyName, expenses in
+                                VStack(alignment: .leading, spacing: 12) {
+                                    // Header de section
+                                    HStack {
+                                        Image(systemName: frequencyIcon(for: frequencyName))
+                                            .foregroundColor(Color.turquoiseVintage)
+                                            .font(.title3)
+                                        
+                                        Text(frequencyName)
+                                            .font(.appHeadline)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(Color.adaptiveText(colorScheme))
+                                        
+                                        Spacer()
+                                        
+                                        Text("\(expenses.count)")
+                                            .font(.appCaption)
+                                            .fontWeight(.bold)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(Color.turquoiseVintage.opacity(0.2))
+                                            .foregroundColor(Color.turquoiseVintage)
+                                            .cornerRadius(8)
+                                    }
+                                    .padding(.horizontal, 20)
+                                    
+                                    // Dépenses de cette fréquence
+                                    VStack(spacing: 12) {
+                                        ForEach(expenses) { expense in
+                                            RecurringExpenseRowView(expense: expense)
                                         }
-                                }
-                            } header: {
-                                HStack {
-                                    Image(systemName: frequencyIcon(for: frequencyName))
-                                        .foregroundColor(Color.turquoiseVintage)
-                                        .font(.title3)
-                                    
-                                    Text(frequencyName)
-                                        .font(.appHeadline)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(Color.adaptiveText(colorScheme))
-                                    
-                                    Spacer()
-                                    
-                                    Text("\(expenses.count)")
-                                        .font(.appCaption)
-                                        .fontWeight(.bold)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(Color.turquoiseVintage.opacity(0.2))
-                                        .foregroundColor(Color.turquoiseVintage)
-                                        .cornerRadius(8)
+                                    }
                                 }
                             }
                         }
                     }
-                    .listStyle(PlainListStyle())
-                    .scrollContentBackground(.hidden)
-                    .background(Color.adaptiveBackground(colorScheme))
                 }
+                .padding(.bottom, 20)
             }
             .background(Color.adaptiveBackground(colorScheme))
             .navigationTitle("🔄 Dépenses récurrentes")
             .navigationBarTitleDisplayMode(.large)
-            .toolbarBackground(Color.turquoiseVintage.opacity(0.1), for: .navigationBar)
+            .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
@@ -249,10 +240,7 @@ struct FrequencyFilterView: View {
             .padding(.horizontal, 20)
         }
         .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 0)
-                .fill(Color.adaptiveSurface(colorScheme).opacity(0.5))
-        )
+        // Suppression du fond pour permettre au fond vert d'être visible
     }
     
     private func frequencyColor(for frequency: Frequency) -> Color {
@@ -348,6 +336,7 @@ struct RecurringExpenseRowView: View {
                         .font(.appHeadline)
                         .fontWeight(.semibold)
                         .foregroundColor(Color.adaptiveText(colorScheme))
+                        .lineLimit(2)
                     
                     HStack(spacing: 8) {
                         // Badge catégorie
@@ -476,6 +465,22 @@ struct RecurringExpenseRowView: View {
         )
         .shadow(color: categoryColor.opacity(0.1), radius: 6, x: 0, y: 3)
         .opacity(expense.isActive ? 1.0 : 0.6)
+        .padding(.horizontal, 20)
+        .contextMenu {
+            Button(action: {
+                budgetManager.deleteRecurringExpense(expense)
+            }) {
+                Label("Supprimer", systemImage: "trash")
+            }
+            
+            if expense.isDue {
+                Button(action: {
+                    budgetManager.processRecurringExpense(expense)
+                }) {
+                    Label("Traiter", systemImage: "checkmark.circle")
+                }
+            }
+        }
     }
 }
 
