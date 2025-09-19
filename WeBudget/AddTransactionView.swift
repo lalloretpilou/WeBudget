@@ -23,15 +23,15 @@ struct AddTransactionView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section("📋 Détails de la transaction") {
-                    DatePicker("📅 Date", selection: $date, displayedComponents: .date)
+                Section("Détails de la transaction") {
+                    DatePicker("Date", selection: $date, displayedComponents: .date)
                         .font(.appBody) // Space Grotesk Regular
                     
-                    TextField("📝 Description", text: $description)
+                    TextField("Description", text: $description)
                         .font(.appBody) // Space Grotesk Regular
                         .textInputAutocapitalization(.sentences)
                     
-                    Picker("🏷️ Catégorie", selection: $selectedCategory) {
+                    Picker("Catégorie", selection: $selectedCategory) {
                         ForEach(TransactionCategory.allCases, id: \.self) { category in
                             Text(category.displayName)
                                 .font(.appBody) // Space Grotesk Regular
@@ -41,7 +41,7 @@ struct AddTransactionView: View {
                     .font(.appBody) // Space Grotesk Regular
                     
                     HStack {
-                        Text("💰 Montant")
+                        Text("Montant")
                             .font(.appBody) // Space Grotesk Regular
                         
                         Spacer()
@@ -58,7 +58,7 @@ struct AddTransactionView: View {
                             .foregroundColor(.secondary)
                     }
                     
-                    Picker("👤 Payeur", selection: $selectedPayer) {
+                    Picker("Payeur", selection: $selectedPayer) {
                         ForEach(Payer.allCases, id: \.self) { payer in
                             Text(payer.displayName)
                                 .font(.appBody) // Space Grotesk Regular
@@ -69,7 +69,7 @@ struct AddTransactionView: View {
                 }
                 
                 if !description.isEmpty && !amount.isEmpty {
-                    Section("📋 Résumé") {
+                    Section("Résumé") {
                         TransactionPreviewView(
                             date: date,
                             description: description,
@@ -80,7 +80,7 @@ struct AddTransactionView: View {
                     }
                 }
             }
-            .navigationTitle("➕ Nouvelle transaction")
+            .navigationTitle("Nouvelle transaction")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {

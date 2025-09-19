@@ -82,7 +82,7 @@ struct RecurringExpensesView: View {
                 .padding(.bottom, 20)
             }
             .background(Color.adaptiveBackground(colorScheme))
-            .navigationTitle("🔄 Dépenses récurrentes")
+            .navigationTitle("Dépenses récurrentes")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
@@ -129,7 +129,7 @@ struct RecurringSummaryCard: View {
         VStack(spacing: 16) {
             HStack {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("💰 Total mensuel")
+                    Text("Total mensuel")
                         .font(.appSubheadline)
                         .fontWeight(.medium)
                         .foregroundColor(Color.adaptiveText(colorScheme))
@@ -143,7 +143,7 @@ struct RecurringSummaryCard: View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 6) {
-                    Text("⏰ En attente")
+                    Text("En attente")
                         .font(.appSubheadline)
                         .fontWeight(.medium)
                         .foregroundColor(Color.adaptiveText(colorScheme))
@@ -519,12 +519,12 @@ struct AddRecurringExpenseView: View {
             Form {
                 // Section informations générales avec style rétro
                 Section {
-                    TextField("Description", text: $description)
+                    TextField("Nom", text: $description)
                         .font(.appBody)
                         .textInputAutocapitalization(.sentences)
                     
                     HStack {
-                        Text("💰 Montant")
+                        Text("Montant")
                             .font(.appBody)
                         
                         Spacer()
@@ -550,7 +550,7 @@ struct AddRecurringExpenseView: View {
                             .foregroundColor(.secondary)
                     }
                     
-                    Picker("🏷️ Catégorie", selection: $selectedCategory) {
+                    Picker("Catégorie", selection: $selectedCategory) {
                         ForEach(TransactionCategory.allCases, id: \.self) { category in
                             HStack {
                                 Text(category.icon)
@@ -562,7 +562,7 @@ struct AddRecurringExpenseView: View {
                     }
                     .font(.appBody)
                     
-                    Picker("👤 Payeur", selection: $selectedPayer) {
+                    Picker("Payeur", selection: $selectedPayer) {
                         ForEach(Payer.allCases, id: \.self) { payer in
                             HStack {
                                 Circle()
@@ -587,7 +587,7 @@ struct AddRecurringExpenseView: View {
                                 .font(.title3)
                         }
                         
-                        Text("📋 Informations générales")
+                        Text("Informations générales")
                             .font(.appHeadline)
                             .fontWeight(.semibold)
                             .foregroundColor(Color.adaptiveText(colorScheme))
@@ -597,7 +597,7 @@ struct AddRecurringExpenseView: View {
                 
                 // Section récurrence
                 Section {
-                    Picker("📅 Fréquence", selection: $selectedFrequency) {
+                    Picker("Fréquence", selection: $selectedFrequency) {
                         ForEach(Frequency.allCases, id: \.self) { frequency in
                             Text(frequency.displayName)
                                 .font(.appBody)
@@ -606,18 +606,18 @@ struct AddRecurringExpenseView: View {
                     }
                     .font(.appBody)
                     
-                    DatePicker("📅 Date de début", selection: $startDate, displayedComponents: .date)
+                    DatePicker("Date de début", selection: $startDate, displayedComponents: .date)
                         .font(.appBody)
                     
-                    Toggle("📅 Date de fin", isOn: $hasEndDate)
+                    Toggle("Date de fin", isOn: $hasEndDate)
                         .font(.appBody)
                     
                     if hasEndDate {
-                        DatePicker("📅 Date de fin", selection: $endDate, displayedComponents: .date)
+                        DatePicker("Date de fin", selection: $endDate, displayedComponents: .date)
                             .font(.appBody)
                     }
                     
-                    Toggle("🤖 Génération automatique", isOn: $autoGenerate)
+                    Toggle("Génération automatique", isOn: $autoGenerate)
                         .font(.appBody)
                         .tint(Color.limeElectric)
                     
@@ -634,7 +634,7 @@ struct AddRecurringExpenseView: View {
                     }
                     
                 } header: {
-                    Text("⏰ Configuration de la récurrence")
+                    Text("Configuration de la récurrence")
                         .font(.appHeadline)
                         .fontWeight(.semibold)
                         .foregroundColor(Color.adaptiveText(colorScheme))
@@ -652,7 +652,7 @@ struct AddRecurringExpenseView: View {
                             frequency: selectedFrequency
                         )
                     } header: {
-                        Text("👀 Aperçu")
+                        Text("Aperçu")
                             .font(.appHeadline)
                             .fontWeight(.semibold)
                             .foregroundColor(Color.adaptiveText(colorScheme))
@@ -662,7 +662,7 @@ struct AddRecurringExpenseView: View {
             }
             .scrollContentBackground(.hidden)
             .background(Color.adaptiveBackground(colorScheme))
-            .navigationTitle("➕ Nouvelle dépense récurrente")
+            .navigationTitle("Ajout")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.turquoiseVintage.opacity(0.1), for: .navigationBar)
             .toolbar {
@@ -897,24 +897,6 @@ struct EmptyRecurringExpensesView: View {
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(4)
-            }
-            
-            // Suggestions avec style rétro
-            VStack(spacing: 8) {
-                HStack(spacing: 8) {
-                    Image(systemName: "lightbulb.fill")
-                        .foregroundColor(Color.khakiGold)
-                    Text("Idées : Netflix, Spotify, loyer, assurance...")
-                        .font(.appFootnote)
-                        .fontWeight(.medium)
-                        .foregroundColor(Color.khakiGold)
-                    Image(systemName: "lightbulb.fill")
-                        .foregroundColor(Color.khakiGold)
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(Color.khakiGold.opacity(0.1))
-                .cornerRadius(12)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

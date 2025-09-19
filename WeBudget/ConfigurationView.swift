@@ -37,7 +37,7 @@ struct ConfigurationView: View {
                     
                     ProportionDisplayView(salaires: tempSalaires)
                 } header: {
-                    Text("💰 Revenus du couple")
+                    Text("Revenus du couple")
                         .font(.appSubheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(Color.incomeColor)
@@ -231,7 +231,7 @@ struct ProportionDisplayView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("📊 Répartition:")
+                Text("Répartition:")
                     .font(.appSubheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(Color.adaptiveText(colorScheme))

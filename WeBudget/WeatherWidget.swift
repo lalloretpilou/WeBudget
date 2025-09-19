@@ -287,7 +287,7 @@ struct WeatherSuggestionsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("💡 Suggestions météo")
+                Text("Suggestions météo")
                     .font(.appHeadline) // Space Grotesk SemiBold
                     .fontWeight(.bold)
                 
@@ -400,7 +400,7 @@ struct ExpensePredictionsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("📊 Prédictions météo")
+                Text("Prédictions météo")
                     .font(.appHeadline) // Space Grotesk SemiBold
                     .fontWeight(.bold)
                 

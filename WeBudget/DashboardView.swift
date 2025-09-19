@@ -58,7 +58,7 @@ struct FinancialHealthWidget: View {
         VStack(spacing: 16) {
             HStack {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("💊 Santé Financière")
+                    Text("Santé Financière")
                         .font(.appHeadline)
                         .fontWeight(.bold)
                         .foregroundColor(Color.adaptiveText(colorScheme))
@@ -99,7 +99,7 @@ struct FinancialHealthWidget: View {
             // Détail des calculs
             VStack(spacing: 8) {
                 HStack {
-                    Text("💰 Revenus totaux:")
+                    Text("Revenus totaux:")
                         .font(.appCaption)
                         .foregroundColor(.secondary)
                     
@@ -111,7 +111,7 @@ struct FinancialHealthWidget: View {
                 }
                 
                 HStack {
-                    Text("📊 Charges communes:")
+                    Text("Charges communes:")
                         .font(.appCaption)
                         .foregroundColor(.secondary)
                     
@@ -124,7 +124,7 @@ struct FinancialHealthWidget: View {
                 
                 if budgetManager.totalMonthlyRecurring > 0 {
                     HStack {
-                        Text("🔄 Dépenses récurrentes:")
+                        Text("Dépenses récurrentes:")
                             .font(.appCaption)
                             .foregroundColor(.secondary)
                         
@@ -138,7 +138,7 @@ struct FinancialHealthWidget: View {
                 
                 if budgetManager.totalMonthlySavingsGoals > 0 {
                     HStack {
-                        Text("🎯 Épargne mensuelle:")
+                        Text("Épargne mensuelle:")
                             .font(.appCaption)
                             .foregroundColor(.secondary)
                         
@@ -153,7 +153,7 @@ struct FinancialHealthWidget: View {
                 Divider()
                 
                 HStack {
-                    Text("💳 Redistribution Pilou:")
+                    Text("Redistribution Pilou:")
                         .font(.appSubheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.blue)
@@ -167,7 +167,7 @@ struct FinancialHealthWidget: View {
                 }
                 
                 HStack {
-                    Text("💳 Redistribution Doudou:")
+                    Text("Redistribution Doudou:")
                         .font(.appSubheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.purple)
@@ -312,7 +312,7 @@ struct BudgetProgressView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             HStack {
-                Text("🎯 Suivi des budgets")
+                Text("Suivi des budgets")
                     .font(.appTitle3)
                     .fontWeight(.bold)
                     .foregroundColor(Color.adaptiveText(colorScheme))
@@ -535,7 +535,7 @@ struct AlertsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("🔔 Alertes")
+                Text("Alertes")
                     .font(.appTitle3)
                     .fontWeight(.bold)
                     .foregroundColor(Color.adaptiveText(colorScheme))
@@ -632,7 +632,7 @@ struct RecentTransactionsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             HStack {
-                Text("💳 Transactions récentes")
+                Text("Transactions récentes")
                     .font(.appTitle3)
                     .fontWeight(.bold)
                     .foregroundColor(Color.adaptiveText(colorScheme))

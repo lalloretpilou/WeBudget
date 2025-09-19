@@ -74,38 +74,38 @@ struct SettingsView: View {
                         }
                     }
                     
-                    NavigationLink {
-                        SavingsGoalsView()
-                            .navigationBarBackButtonHidden(false)
-                    } label: {
-                        HStack {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color.plumVintage.opacity(0.2))
-                                    .frame(width: 32, height: 32)
-                                Image(systemName: "target")
-                                    .foregroundColor(Color.plumVintage)
-                                    .font(.system(size: 16, weight: .semibold))
-                            }
-                            
-                            Text("Objectifs d'épargne")
-                                .font(.appCallout)
-                                .foregroundColor(Color.adaptiveText(colorScheme))
-                            
-                            Spacer()
-                            
-                            if budgetManager.behindScheduleGoals.count > 0 {
-                                Text("\(budgetManager.behindScheduleGoals.count)")
-                                    .font(.appCaption)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.softCoral)
-                                    .cornerRadius(12)
-                            }
-                        }
-                    }
+//                    NavigationLink {
+//                        SavingsGoalsView()
+//                            .navigationBarBackButtonHidden(false)
+//                    } label: {
+//                        HStack {
+//                            ZStack {
+//                                RoundedRectangle(cornerRadius: 8)
+//                                    .fill(Color.plumVintage.opacity(0.2))
+//                                    .frame(width: 32, height: 32)
+//                                Image(systemName: "target")
+//                                    .foregroundColor(Color.plumVintage)
+//                                    .font(.system(size: 16, weight: .semibold))
+//                            }
+//                            
+//                            Text("Objectifs d'épargne")
+//                                .font(.appCallout)
+//                                .foregroundColor(Color.adaptiveText(colorScheme))
+//                            
+//                            Spacer()
+//                            
+//                            if budgetManager.behindScheduleGoals.count > 0 {
+//                                Text("\(budgetManager.behindScheduleGoals.count)")
+//                                    .font(.appCaption)
+//                                    .fontWeight(.bold)
+//                                    .foregroundColor(.white)
+//                                    .padding(.horizontal, 8)
+//                                    .padding(.vertical, 4)
+//                                    .background(Color.softCoral)
+//                                    .cornerRadius(12)
+//                            }
+//                        }
+//                    }
                 } header: {
                     Text("Fonctionnalités")
                         .font(.appSubheadline)
@@ -437,7 +437,8 @@ struct HelpSection: View {
 
 struct AboutView: View {
     @Environment(\.colorScheme) private var colorScheme
-    
+    private let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+
     var body: some View {
         ScrollView {
             VStack(spacing: 30) {
@@ -459,7 +460,7 @@ struct AboutView: View {
                         .fontWeight(.bold)
                         .foregroundColor(Color.adaptiveText(colorScheme))
                     
-                    Text("Version 1.0.0")
+                    Text("Version \(appVersion)")
                         .font(.appSubheadline)
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 16)

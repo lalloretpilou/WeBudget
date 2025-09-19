@@ -180,7 +180,7 @@ struct EditTransactionView: View {
                     }
                 } header: {
                     HStack {
-                        Text("✏️ Détails de la transaction")
+                        Text("Détails de la transaction")
                             .font(.appHeadline)
                             .fontWeight(.semibold)
                             .foregroundColor(Color.adaptiveText(colorScheme))
@@ -206,7 +206,7 @@ struct EditTransactionView: View {
                             payer: selectedPayer
                         )
                     } header: {
-                        Text("👀 Aperçu des modifications")
+                        Text("Aperçu des modifications")
                             .font(.appHeadline)
                             .fontWeight(.semibold)
                             .foregroundColor(Color.adaptiveText(colorScheme))
@@ -285,7 +285,7 @@ struct EditTransactionView: View {
                         }
                         .padding(.vertical, 4)
                     } header: {
-                        Text("🔄 Résumé des modifications")
+                        Text("Résumé des modifications")
                             .font(.appHeadline)
                             .fontWeight(.semibold)
                             .foregroundColor(Color.adaptiveText(colorScheme))
@@ -295,7 +295,7 @@ struct EditTransactionView: View {
             }
             .scrollContentBackground(.hidden)
             .background(Color.adaptiveBackground(colorScheme))
-            .navigationTitle("✏️ Modifier transaction")
+            .navigationTitle("Modifier transaction")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.turquoiseVintage.opacity(0.1), for: .navigationBar)
             .toolbar {
