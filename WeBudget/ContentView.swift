@@ -11,26 +11,41 @@ struct ContentView: View {
                     DashboardView()
                         .tabItem {
                             Image(systemName: "house.fill")
-                            Text("Dashboard")
+                            Text("")
                         }
                     
                     TransactionsView()
                         .tabItem {
                             Image(systemName: "creditcard.fill")
-                            Text("Dépenses")
+                            Text("")
                         }
                     
                     SettingsView()
                         .tabItem {
                             Image(systemName: "slider.horizontal.3")
-                            Text("Paramètres")
+                            Text("")
                         }
                 }
                 .environmentObject(budgetManager)
+                .overlay(TabBarConfigurator().allowsHitTesting(false))
+
             } else {
                 AuthenticationStatusView()
                     .environmentObject(budgetManager)
             }
+        }
+        
+    }
+}
+
+struct TabBarConfigurator: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> UIViewController {
+        UIViewController()
+    }
+
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+        if let tabBarController = uiViewController.tabBarController {
+            tabBarController.tabBarMinimizeBehavior = .onScrollDown // Intégration de la ligne souhaitée
         }
     }
 }

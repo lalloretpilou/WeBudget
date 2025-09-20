@@ -205,7 +205,6 @@ struct SettingsView: View {
             .scrollContentBackground(.hidden)
             .navigationTitle("Paramètres")
             .navigationBarTitleDisplayMode(.large)
-            .toolbarBackground(Color.sunsetGlow, for: .navigationBar)
             .alert("Effacer toutes les données", isPresented: $showingClearAlert) {
                 
                 Button("Effacer", role: .destructive) {
